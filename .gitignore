@@ -1,0 +1,9 @@
+# generated files/directories
+build/
+
+# Sublime Text project/workspace files
+*.sublime-workspace
+*.sublime-project
+
+# Clang autocomplete file
+.clang_complete
