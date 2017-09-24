@@ -40,6 +40,7 @@ BOCHSCONFIG := $(OUTCONFDIR)/bochsrc
 BOCHSDEBUG := $(OUTCONFDIR)/bochsdebug.rc
 
 export BOOTBINDIR
+export KERNELBINDIR
 export MBHEADEROBJ
 export GRUBBINPATH := /boot/$(notdir $(BINARY))
 export BOCHSOUT := $(BUILDDIR)/bochsout.txt
