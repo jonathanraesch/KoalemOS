@@ -44,6 +44,7 @@ bits 32
 extern boot_error
 extern mmap_find
 extern mmap_sanitize
+extern paging_set_up_boot_mapping
 
 global start_kernel
 start_kernel:
@@ -87,6 +88,9 @@ new_cseg_start:
 	push dword [ebp-8]
 	call mmap_sanitize
 	add esp, 4
+
+	call paging_set_up_boot_mapping;
+	mov cr3, eax
 
 	mov ebx, [ebp-8]
 	xchg bx, bx
