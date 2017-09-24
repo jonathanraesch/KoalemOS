@@ -101,6 +101,7 @@ global boot_print
 boot_print:
 	push ebp
 	mov ebp, esp
+	push ebx
 	mov ebx, [ebp+8]
 	mov ecx, 0
 	mov ah, 0x04
@@ -112,5 +113,6 @@ boot_print:
 	inc ecx
 	jmp boot_print_loop
 	boot_print_end:
+	pop ebx
 	pop ebp
 	ret
