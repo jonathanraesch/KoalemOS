@@ -1,30 +1,3 @@
-section .data
-
-
-align 8
-gdt_start:
-; null descriptor
-dq 0
-; code descriptor
-dw 0xffff
-dw 0x0000
-db 0x00
-db 0b10011010
-db 0b11001111
-db 0x00
-; data descriptor
-dw 0xffff
-dw 0x0000
-db 0x00
-db 0b10010010
-db 0b11001111
-db 0x00
-gdt_end:
-
-gdt_descriptor:
-dw gdt_end - gdt_start - 1	; limit
-dd gdt_start				; base address
-
 section .bss
 align 16
 stack_bottom:
@@ -45,6 +18,7 @@ extern boot_error
 extern mmap_find
 extern mmap_sanitize
 extern paging_set_up_boot_mapping
+extern boot_set_up_gdt32
 
 global start_kernel
 start_kernel:
@@ -68,7 +42,8 @@ start_kernel:
 	call boot_error
 	mb_magic_check_success:
 
-	lgdt [gdt_descriptor]
+	call boot_set_up_gdt32
+	lgdt [eax]
 	jmp (1 << 3):new_cseg_start
 new_cseg_start:
 	mov ax, (2 << 3)
