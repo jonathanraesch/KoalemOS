@@ -5,9 +5,6 @@ resb 32768
 stack_top:
 
 
-;section .rodata
-;str_error_no_multiboot: db "Error: Bootloader not Multiboot2-compliant", 0
-;str_error_no_mmap: db "Error: Memory Map not supported", 0
 extern str_error_no_multiboot
 extern str_error_no_mmap
 
@@ -58,8 +55,6 @@ new_cseg_start:
 	add esp, 4
 	mov [ebp-8], eax
 
-	mov ebx, [ebp-8]
-	xchg bx, bx
 	push dword [ebp-8]
 	call mmap_sanitize
 	add esp, 4
