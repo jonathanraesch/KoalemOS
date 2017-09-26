@@ -16,9 +16,12 @@ extern mmap_find
 extern mmap_sanitize
 extern paging_set_up_boot_mapping
 extern boot_set_up_gdt32
+extern boot_set_up_gdt64
 
-global start_kernel
-start_kernel:
+extern _kernel_start
+
+global _boot_start
+_boot_start:
 	; disable nmi
 	lea esp, [stack_top]
 	mov ebp, esp
@@ -62,12 +65,36 @@ new_cseg_start:
 	call paging_set_up_boot_mapping;
 	mov cr3, eax
 
-	mov ebx, [ebp-8]
-	xchg bx, bx
+	call boot_set_up_gdt64
+	mov ebx, eax
 
-loop:   
-	hlt
-	jmp loop
+	mov eax, cr4
+	or eax, (1 << 5)
+	mov cr4, eax
+
+	mov ecx, 0xc0000080
+	rdmsr
+	or eax, (1 << 8)
+	wrmsr
+
+	mov eax, cr0
+	or eax, (1 << 31)
+	mov cr0, eax
+
+	jmp 0x18:boot_64_start
+boot_64_start:
+bits 64
+	lgdt [ebx]
+	jmp dword far [boot_64_farjump_target]
+boot_64_farjump_target:
+	dd boot_64_new_gdt
+	dw 0x08
+boot_64_new_gdt:
+	jmp [kernel_start_addr]
+kernel_start_addr:
+dq _kernel_start
+
+bits 32
 
 
 global boot_print

@@ -1,4 +1,4 @@
-ENTRY(start_kernel)
+ENTRY(_boot_start)
 
 SECTIONS {
          . = 1M;
