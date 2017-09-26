@@ -2,10 +2,15 @@
 #include <stdint.h>
 
 
-typedef struct __attribute__((__packed__)) gdtr_t {
+typedef struct __attribute__((__packed__)) gdtr32_t {
 	uint16_t limit;
 	uint32_t base_address;
-} gdtr_t;
+} gdtr32_t;
+
+typedef struct __attribute__((__packed__)) gdtr64_t {
+	uint16_t limit;
+	uint64_t base_address;
+} gdtr64_t;
 
 
 #define GDT_SEGMENT_DESCRIPTOR(BASE, LIMIT, TYPE, DPL, FLAGS) (		\
@@ -35,4 +40,5 @@ typedef struct __attribute__((__packed__)) gdtr_t {
 #define GDT_SEGMENT_FLAG_GRANULARITY	((uint64_t)1 << 55)
 
 
-gdtr_t* boot_set_up_gdt32();
+gdtr32_t* boot_set_up_gdt32();
+gdtr64_t* boot_set_up_gdt64();
