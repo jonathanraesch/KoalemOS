@@ -20,7 +20,7 @@
 #define PAGING_PDPT_OFFSET(LIN_ADDR) (((LIN_ADDR)>>30) & 0x1FF)
 #define PAGING_PML4_OFFSET(LIN_ADDR) ((LIN_ADDR)>>39)
 
-#define KERNEL_LINADDR 0xFF0000000000
+#define KERNEL_LINADDR 0xFFFFFF0000000000
 
 
 /* sets up minimal paging to boot kernel

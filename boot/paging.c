@@ -32,8 +32,8 @@ void* paging_set_up_boot_mapping() {
 		}
 	}
 
-	pml4[PAGING_PML4_OFFSET(KERNEL_LINADDR)] = ((uintptr_t)kernel_pdpt) | PAGING_FLAG_PRESENT | PAGING_FLAG_READ_WRITE;
-	kernel_pdpt[PAGING_PDPT_OFFSET(KERNEL_LINADDR)] = ((uintptr_t)kernel_pd) | PAGING_FLAG_PRESENT | PAGING_FLAG_READ_WRITE;
+	pml4[PAGING_PML4_OFFSET(KERNEL_LINADDR & 0xFFFFFFFFFFFF)] = ((uintptr_t)kernel_pdpt) | PAGING_FLAG_PRESENT | PAGING_FLAG_READ_WRITE;
+	kernel_pdpt[PAGING_PDPT_OFFSET(KERNEL_LINADDR & 0xFFFFFFFFFFFF)] = ((uintptr_t)kernel_pd) | PAGING_FLAG_PRESENT | PAGING_FLAG_READ_WRITE;
 	for(int i = 0; i < 512; i++) {
 		kernel_pd[i] = ((uintptr_t)(kernel_pts[i])) | PAGING_FLAG_PRESENT | PAGING_FLAG_READ_WRITE;
 	}

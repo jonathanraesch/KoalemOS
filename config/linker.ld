@@ -26,7 +26,7 @@ SECTIONS {
 
 
          /* kernel is located at 255TiB (virtual/linear address) */
-         . = 0xFF0000000000;
+         . = 0xFFFFFF0000000000;
          _kernel_begin_linaddr = .;
          _kernel_begin_physaddr = _boot_end_addr;
 
