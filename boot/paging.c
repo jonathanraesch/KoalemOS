@@ -11,13 +11,13 @@ extern uint8_t _kernel_end_physaddr;
 
 /* neither kernel nor boot code can exceed their 1GB aligned memory region
    if their base address is 1GB aligned, the maximum size is 1GB */
-static uint64_t pml4[512];
-static uint64_t boot_pdpt[512];
-static uint64_t boot_pd[512];
-static uint64_t boot_pts[512][512];
-static uint64_t kernel_pdpt[512];
-static uint64_t kernel_pd[512];
-static uint64_t kernel_pts[512][512];
+static uint64_t __attribute__((aligned(0x1000))) pml4[512];
+static uint64_t __attribute__((aligned(0x1000))) boot_pdpt[512];
+static uint64_t __attribute__((aligned(0x1000))) boot_pd[512];
+static uint64_t __attribute__((aligned(0x1000))) boot_pts[512][512];
+static uint64_t __attribute__((aligned(0x1000))) kernel_pdpt[512];
+static uint64_t __attribute__((aligned(0x1000))) kernel_pd[512];
+static uint64_t __attribute__((aligned(0x1000))) kernel_pts[512][512];
 
 
 void* paging_set_up_boot_mapping() {
@@ -28,7 +28,7 @@ void* paging_set_up_boot_mapping() {
 	}
 	for(int i = 0; i < 512; i++) {
 		for(int j = 0; j < 512; j++) {
-			kernel_pts[i][j] = (((uintptr_t)(&_boot_begin_addr) & -30) + 0x200000*i + 0x1000*j) | PAGING_FLAG_PRESENT | PAGING_FLAG_READ_WRITE;
+			boot_pts[i][j] = (((uintptr_t)(&_boot_begin_addr) & -((uintptr_t)1<<30)) + 0x200000*i + 0x1000*j) | PAGING_FLAG_PRESENT | PAGING_FLAG_READ_WRITE;
 		}
 	}
 
