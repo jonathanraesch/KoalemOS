@@ -26,7 +26,7 @@ const uint64_t boot_gdt32[4] = {
 	)
 };
 
-const uint64_t boot_gdt64[3] = {
+const uint64_t boot_gdt64[2] = {
 	0,
 	GDT_SEGMENT_DESCRIPTOR(
 		0,
@@ -34,13 +34,6 @@ const uint64_t boot_gdt64[3] = {
 		GDT_SEGMENT_TYPE_CODE,
 		0,
 		GDT_SEGMENT_FLAG_S_TYPE | GDT_SEGMENT_FLAG_PRESENT | GDT_SEGMENT_FLAG_64BIT_CODE
-	),
-	GDT_SEGMENT_DESCRIPTOR(
-		0,
-		0,
-		GDT_SEGMENT_TYPE_DATA,
-		0,
-		GDT_SEGMENT_FLAG_S_TYPE | GDT_SEGMENT_FLAG_PRESENT
 	)
 };
 
