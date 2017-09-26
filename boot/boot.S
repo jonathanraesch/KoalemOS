@@ -44,9 +44,9 @@ _boot_start:
 
 	call boot_set_up_gdt32
 	lgdt [eax]
-	jmp (1 << 3):new_cseg_start
+	jmp 0x08:new_cseg_start
 new_cseg_start:
-	mov ax, (2 << 3)
+	mov ax, 0x10
 	mov ds, ax
 	mov ss, ax
 	mov es, ax
