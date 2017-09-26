@@ -26,23 +26,24 @@ SECTIONS {
 
 
          /* kernel is located at 255TiB (virtual/linear address) */
-         _kernel_begin_linaddr = 0xFF0000000000;
-         _kernel_begin_physaddr = .;
+         . = 0xFF0000000000;
+         _kernel_begin_linaddr = .;
+         _kernel_begin_physaddr = _boot_end_addr;
 
-         .text ALIGN(_boot_end_addr, 4K) : AT(ALIGN(4K)) {
+         .kernel_text ALIGN(4K) : AT(ALIGN(_kernel_begin_physaddr, 4K)) {
            ${KERNELBINDIR}/*(.text)
          }
-         .rodata ALIGN(ADDR(.text)+SIZEOF(.text), 4K) : AT(ALIGN(4K)) {
-           ${KERNELBINDIR}/*(.rodata)
+         .kernel_rodata ALIGN(4K) : AT(ALIGN(LOADADDR(.kernel_text)+SIZEOF(.kernel_text), 4K)) {
+           ${KERNELBINDIR}/*(.rodata) 
          }
-         .data ALIGN(ADDR(.rodata)+SIZEOF(.rodata), 4K) : AT(ALIGN(4K)) {
+         .kernel_data ALIGN(4K) : AT(ALIGN(LOADADDR(.kernel_rodata)+SIZEOF(.kernel_rodata), 4K)) {
            ${KERNELBINDIR}/*(.data)
          }
-         .bss ALIGN(ADDR(.data)+SIZEOF(.data), 4K) : AT(ALIGN(4K)) {
+         .kernel_bss ALIGN(4K) : AT(ALIGN(LOADADDR(.kernel_data)+SIZEOF(.kernel_data), 4K)) {
            ${KERNELBINDIR}/*(COMMON)
            ${KERNELBINDIR}/*(.bss)
          }
 
-         _kernel_end_linaddr = ADDR(.bss) + SIZEOF(.bss);
-         _kernel_end_physaddr =  .;
+         _kernel_end_linaddr = .;
+         _kernel_end_physaddr =  LOADADDR(.kernel_bss) + SIZEOF(.kernel_bss);
 }
