@@ -9,7 +9,7 @@ ENVSUBST := envsubst
 OBJCOPY := objcopy
 
 ASFLAGS := -w+all -f elf64
-CFLAGS := -Wall -ffreestanding -O0 -nostdlib -mno-red-zone -masm=intel
+CFLAGS := -Wall -ffreestanding -O0 -nostdlib -mno-red-zone -masm=intel -fno-asynchronous-unwind-tables
 BOOTASFLAGS := $(ASFLAGS)
 BOOTCFLAGS := $(CFLAGS) -m32
 KERNELASFLAGS := $(ASFLAGS)
