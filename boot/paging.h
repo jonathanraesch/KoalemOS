@@ -21,6 +21,7 @@
 #define PAGING_PML4_OFFSET(LIN_ADDR) ((LIN_ADDR)>>39)
 
 #define KERNEL_LINADDR 0xFFFFFF0000000000
+#define REALMODE_MEM_LINADDR 0xFFFF800000000000
 
 
 /* sets up minimal paging to boot kernel
