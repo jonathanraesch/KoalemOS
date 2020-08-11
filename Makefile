@@ -1,9 +1,10 @@
 SHELL := /bin/sh
 
-CC := x86_64-elf-gcc
+CROSSDIR := /usr/local/x86_64-elf-toolchain
+CC := $(CROSSDIR)/bin/x86_64-elf-gcc
 AS := nasm
-LD := x86_64-elf-ld
-LIBC := /usr/local/x86_64-elf-toolchain/lib/gcc/x86_64-elf/7.2.0
+LD := $(CROSSDIR)/bin/x86_64-elf-ld
+LIBC := $(CROSSDIR)/lib/gcc/x86_64-elf/10.2.0
 
 ENVSUBST := envsubst
 OBJCOPY := objcopy
