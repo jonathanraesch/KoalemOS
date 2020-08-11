@@ -14,3 +14,7 @@ KoalemOS is a hobby project to explore OS development.
 ## ToDo
 
 * verify build requirements
+* set up kernel stack
+* expand paging support
+  * add memory typing using PAT/MTRRs
+  * add code to edit page structures
