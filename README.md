@@ -13,4 +13,4 @@ KoalemOS is a hobby project to explore OS development.
 
 ## ToDo
 
-[] verify build requirements
+ [ ] verify build requirements
