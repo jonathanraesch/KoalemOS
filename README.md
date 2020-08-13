@@ -6,6 +6,7 @@ KoalemOS is a hobby project to explore OS development.
 
 * bochs
 * bochs-sdl
+* qemu-system-x86_64
 * x86_64-cross-toolchain
 * mtools
 * grub-pc-bin

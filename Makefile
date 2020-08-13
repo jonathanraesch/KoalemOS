@@ -37,6 +37,8 @@ BINARY := $(BINDIR)/koalemos.elf
 OSIMAGE := $(BUILDDIR)/koalemos.iso
 LDSCRIPT := $(OUTCONFDIR)/linker.ld
 GRUBCONFIG := $(OUTCONFDIR)/grub.cfg
+
+DEFAULT_EMULATION = run-qemu
 BOCHSCONFIG := $(OUTCONFDIR)/bochsrc
 BOCHSDEBUG := $(OUTCONFDIR)/bochsdebug.rc
 
@@ -58,8 +60,14 @@ export OSIMAGE
 
 all: $(OSIMAGE)
 
-run: $(OSIMAGE) $(BOCHSCONFIG) $(BOCHSDEBUG)
+run: $(DEFAULT_EMULATION)
+
+run-qemu: $(OSIMAGE)
+	qemu-system-x86_64 $(OSIMAGE)
+
+run-bochs: $(OSIMAGE) $(BOCHSCONFIG) $(BOCHSDEBUG)
 	bochs -qf $(BOCHSCONFIG) -rc $(BOCHSDEBUG)
+
 
 $(OSIMAGE): $(BINARY) $(GRUBCONFIG)
 	mkdir -p $(ISODIR)/boot/grub
