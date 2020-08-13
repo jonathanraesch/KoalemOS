@@ -53,7 +53,7 @@ export OSIMAGE
 -include $(DEPS)
 
 
-.PHONY: all clean run
+.PHONY: all clean run run-qemu run-bochs
 
 .DEFAULT_GOAL := all
 
