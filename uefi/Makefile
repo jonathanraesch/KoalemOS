@@ -21,7 +21,9 @@ build/main.img: build/BOOTX64.efi
 	mformat -i $@ -f $(IMGSIZE) ::
 	mmd -i $@ ::/EFI
 	mmd -i $@ ::/EFI/BOOT
-	mcopy -i $@ $< ::/EFI/BOOT
+	mcopy -i $@ build/BOOTX64.efi ::/EFI/BOOT
+	touch build/kernel.elf
+	mcopy -i $@ build/kernel.elf ::/EFI/BOOT
 
 build/BOOTX64.efi: build/main.so
 	$(OBJCOPY) $(OBJCOPYFLAGS) $< $@
