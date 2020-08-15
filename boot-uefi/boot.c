@@ -48,10 +48,6 @@ efi_main (EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table) {
 
 	status = uefi_call_wrapper(file_prot_kernel->Read, 3, file_prot_kernel, 4096*kernel_pages, (void*)kernel_addr);
 	if (status != EFI_SUCCESS) {
-		CHAR16 *str = L"a";
-		str[0] += status;
-		Print(str);
-		while(TRUE){}
 		return status;
 	}
 
@@ -59,6 +55,20 @@ efi_main (EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table) {
 	Print(((EFI_FILE_INFO*)file_info_buf)->FileName);
 	Print(L"\n");
 
+	UINTN mmap[100];
+	UINTN mmap_buf_size = sizeof(UINTN)*100;
+	UINTN mmap_key;
+	UINTN descr_size;
+	UINT32 desc_ver;
+	status = uefi_call_wrapper(bs->GetMemoryMap, 5, &mmap_buf_size, &mmap, &mmap_key, &descr_size, &desc_ver);
+	if (status != EFI_SUCCESS) {
+		return status;
+	}
+
+	status = uefi_call_wrapper(bs->ExitBootServices, 2, image_handle, mmap_key);
+	if (status != EFI_SUCCESS) {
+		return status;
+	}
 
 	void* pml4 = paging_set_up_boot_mapping(kernel_addr);
 	Print(L"Set up initial page structures");
