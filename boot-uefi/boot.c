@@ -74,9 +74,6 @@ efi_main (EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table) {
 	void* pml4 = paging_set_up_boot_mapping(get_pml4(), kernel_addr);
 	Print(L"Set up initial page structures");
 
-	while(TRUE) {
 
-	}
-
-	return EFI_SUCCESS;
+	boot_end();
 }
