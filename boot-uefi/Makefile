@@ -12,14 +12,19 @@ UEFIOBJCOPYFLAGS := -j .text -j .sdata -j .data -j .dynamic -j .dynsym -j .rel -
 UEFIBUILDDIR := $(BUILDDIR)/uefi
 UEFIBINARY := $(UEFIBUILDDIR)/BOOTX64.efi
 
+UEFISRCS := $(foreach srctype, $(SRCTYPES), $(shell find $(UEFISRCDIR) -name *$(srctype)))
+UEFIOBJS := $(UEFISRCS:$(UEFISRCDIR)/%=$(UEFIBUILDDIR)/%.o)
+UEFIDEPS := $(UEFIOBJS:%.o=%.d)
+
+
 $(UEFIBINARY): $(UEFIBUILDDIR)/boot.so
 	mkdir -p $(dir $@)
 	$(OBJCOPY) $(UEFIOBJCOPYFLAGS) $< $@
 
-$(UEFIBUILDDIR)/boot.so: $(UEFIBUILDDIR)/boot.o
+$(UEFIBUILDDIR)/boot.so: $(UEFIOBJS)
 	mkdir -p $(dir $@)
-	$(UEFILD) $< $(EFILIBDIR)/crt0-efi-x86_64.o $(UEFILDFLAGS) -o $@
+	$(UEFILD) $^ $(EFILIBDIR)/crt0-efi-x86_64.o $(UEFILDFLAGS) -o $@
 
-$(UEFIBUILDDIR)/boot.o: $(UEFISRCDIR)/boot.c
+$(UEFIBUILDDIR)/%.o: $(UEFISRCDIR)/%
 	mkdir -p $(dir $@)
-	$(UEFICC) $< $(UEFICFLAGS) -o $@
+	$(UEFICC) $< $(UEFICFLAGS) -MMD -MF $(@:%.o=%.d) -o $@

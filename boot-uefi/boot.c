@@ -1,5 +1,6 @@
 #include <efi.h>
 #include <efilib.h>
+#include "paging.h"
 
 
 EFI_STATUS
@@ -54,11 +55,13 @@ efi_main (EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table) {
 		return status;
 	}
 
-
 	Print(L"Loaded kernel: ");
 	Print(((EFI_FILE_INFO*)file_info_buf)->FileName);
 	Print(L"\n");
 
+
+	void* pml4 = paging_set_up_boot_mapping(kernel_addr);
+	Print(L"Set up initial page structures");
 
 	while(TRUE) {
 
