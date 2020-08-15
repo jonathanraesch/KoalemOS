@@ -34,12 +34,12 @@ KERNELSRCS := $(foreach srctype, $(SRCTYPES), $(shell find $(KERNELSRCDIR) -name
 SRCS := $(BOOTSRCS) $(KERNELSRCS)
 OBJS := $(SRCS:$(srcdir)/%=$(BINDIR)/%.o)
 DEPS := $(OBJS:%.o=%.d)
+UEFIMAKEFILE := $(UEFISRCDIR)/Makefile
 
 MBHEADEROBJ := $(BOOTBINDIR)/multiboot_header.c.o
 BINARY := $(BINDIR)/koalemos.elf
 OSIMAGE := $(BUILDDIR)/koalemos.iso
 UEFIIMAGE := $(BUILDDIR)/koalemos-uefi.img
-UEFIBINARY := $(UEFISRCDIR)/build/BOOTX64.efi
 LDSCRIPT := $(OUTCONFDIR)/linker.ld
 GRUBCONFIG := $(OUTCONFDIR)/grub.cfg
 
@@ -58,9 +58,10 @@ export OSIMAGE
 
 
 -include $(DEPS)
+-include $(UEFIMAKEFILE)
 
 
-.PHONY: all clean run run-qemu run-bochs run-uefi boot-uefi
+.PHONY: all clean run run-qemu run-bochs run-uefi
 
 .DEFAULT_GOAL := all
 
@@ -78,17 +79,13 @@ run-bochs: $(OSIMAGE) $(BOCHSCONFIG) $(BOCHSDEBUG)
 run-uefi: $(UEFIIMAGE)
 	qemu-system-x86_64 -bios OVMF.fd -net none -hdb $<
 
-
-$(UEFIIMAGE): $(UEFISRCDIR) $(BINARY)
+$(UEFIIMAGE): $(UEFIBINARY) $(BINARY)
 	dd if=/dev/zero of=$@ bs=1k count=$(UEFIIMGSIZE)
 	mformat -i $@ -f $(UEFIIMGSIZE) ::
 	mmd -i $@ ::/EFI
 	mmd -i $@ ::/EFI/BOOT
 	mcopy -i $@ $(UEFIBINARY) ::/EFI/BOOT
 	mcopy -i $@ $(BINARY) ::/EFI/BOOT
-
-$(UEFISRCDIR):
-	$(MAKE) -C $@
 
 $(OSIMAGE): $(BINARY) $(GRUBCONFIG)
 	mkdir -p $(ISODIR)/boot/grub
@@ -132,4 +129,3 @@ $(KERNELBINDIR)/%.o: $(KERNELSRCDIR)/%
 
 clean:
 	-rm -rf $(BUILDDIR)
-	$(MAKE) -C $(UEFISRCDIR) clean
