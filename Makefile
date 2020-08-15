@@ -21,6 +21,7 @@ BUILDDIR := build
 BINDIR := $(BUILDDIR)/bin
 BOOTSRCDIR := $(srcdir)/boot
 BOOTBINDIR := $(BINDIR)/boot
+UEFISRCDIR := $(srcdir)/boot-uefi
 KERNELSRCDIR := $(srcdir)/kernel
 KERNELBINDIR := $(BINDIR)/kernel
 INCONFDIR := $(srcdir)/config
@@ -28,19 +29,25 @@ OUTCONFDIR := $(BUILDDIR)/config
 ISODIR := $(BUILDDIR)/iso
 
 SRCTYPES := .s .S .c .i .ii .cc .cxx .cpp .C
-SRCS := $(foreach srctype, $(SRCTYPES), $(shell find $(srcdir) -name *$(srctype)))
+BOOTSRCS := $(foreach srctype, $(SRCTYPES), $(shell find $(BOOTSRCDIR) -name *$(srctype)))
+KERNELSRCS := $(foreach srctype, $(SRCTYPES), $(shell find $(KERNELSRCDIR) -name *$(srctype)))
+SRCS := $(BOOTSRCS) $(KERNELSRCS)
 OBJS := $(SRCS:$(srcdir)/%=$(BINDIR)/%.o)
 DEPS := $(OBJS:%.o=%.d)
 
 MBHEADEROBJ := $(BOOTBINDIR)/multiboot_header.c.o
 BINARY := $(BINDIR)/koalemos.elf
 OSIMAGE := $(BUILDDIR)/koalemos.iso
+UEFIIMAGE := $(BUILDDIR)/koalemos-uefi.img
+UEFIBINARY := $(UEFISRCDIR)/build/BOOTX64.efi
 LDSCRIPT := $(OUTCONFDIR)/linker.ld
 GRUBCONFIG := $(OUTCONFDIR)/grub.cfg
 
 DEFAULT_EMULATION = run-qemu
 BOCHSCONFIG := $(OUTCONFDIR)/bochsrc
 BOCHSDEBUG := $(OUTCONFDIR)/bochsdebug.rc
+
+UEFIIMGSIZE := 1440
 
 export BOOTBINDIR
 export KERNELBINDIR
@@ -53,12 +60,12 @@ export OSIMAGE
 -include $(DEPS)
 
 
-.PHONY: all clean run run-qemu run-bochs
+.PHONY: all clean run run-qemu run-bochs run-uefi boot-uefi
 
 .DEFAULT_GOAL := all
 
 
-all: $(OSIMAGE)
+all: $(OSIMAGE) $(UEFIIMAGE)
 
 run: $(DEFAULT_EMULATION)
 
@@ -68,6 +75,20 @@ run-qemu: $(OSIMAGE)
 run-bochs: $(OSIMAGE) $(BOCHSCONFIG) $(BOCHSDEBUG)
 	bochs -qf $(BOCHSCONFIG) -rc $(BOCHSDEBUG)
 
+run-uefi: $(UEFIIMAGE)
+	qemu-system-x86_64 -bios OVMF.fd -net none -hdb $<
+
+
+$(UEFIIMAGE): $(UEFISRCDIR) $(BINARY)
+	dd if=/dev/zero of=$@ bs=1k count=$(UEFIIMGSIZE)
+	mformat -i $@ -f $(UEFIIMGSIZE) ::
+	mmd -i $@ ::/EFI
+	mmd -i $@ ::/EFI/BOOT
+	mcopy -i $@ $(UEFIBINARY) ::/EFI/BOOT
+	mcopy -i $@ $(BINARY) ::/EFI/BOOT
+
+$(UEFISRCDIR):
+	$(MAKE) -C $@
 
 $(OSIMAGE): $(BINARY) $(GRUBCONFIG)
 	mkdir -p $(ISODIR)/boot/grub
@@ -111,3 +132,4 @@ $(KERNELBINDIR)/%.o: $(KERNELSRCDIR)/%
 
 clean:
 	-rm -rf $(BUILDDIR)
+	$(MAKE) -C $(UEFISRCDIR) clean

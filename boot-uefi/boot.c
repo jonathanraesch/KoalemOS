@@ -24,7 +24,7 @@ efi_main (EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table) {
 	}
 
 	EFI_FILE_PROTOCOL *file_prot_kernel;
-	status = uefi_call_wrapper(file_prot_root->Open, 5, file_prot_root, &file_prot_kernel, L"\\EFI\\BOOT\\kernel.elf", EFI_FILE_MODE_READ, 0);
+	status = uefi_call_wrapper(file_prot_root->Open, 5, file_prot_root, &file_prot_kernel, L"\\EFI\\BOOT\\koalemos.elf", EFI_FILE_MODE_READ, 0);
 	if (status != EFI_SUCCESS) {
 		return status;
 	}
