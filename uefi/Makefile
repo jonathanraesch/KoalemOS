@@ -14,7 +14,7 @@ IMGSIZE = 1440
 .PHONY = run clean
 
 run: build/main.img
-	qemu-system-x86_64 -L /usr/share_ovmf -bios OVMF.fd -net none -hdb $<
+	qemu-system-x86_64 -bios OVMF.fd -net none -hdb $<
 
 build/main.img: build/BOOTX64.efi
 	dd if=/dev/zero of=$@ bs=1k count=$(IMGSIZE)
