@@ -56,8 +56,8 @@ efi_main (EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table) {
 	Print(((EFI_FILE_INFO*)file_info_buf)->FileName);
 	Print(L"\n");
 
-	UINTN mmap[100];
-	UINTN mmap_buf_size = sizeof(UINTN)*100;
+	UINTN mmap[1000];
+	UINTN mmap_buf_size = sizeof(UINTN)*1000;
 	UINTN mmap_key;
 	UINTN descr_size;
 	UINT32 desc_ver;
@@ -72,8 +72,5 @@ efi_main (EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table) {
 	}
 
 	void* pml4 = paging_set_up_boot_mapping(get_pml4(), kernel_addr);
-	Print(L"Set up initial page structures");
-
-
-	boot_end();
+	boot_end(pml4);
 }

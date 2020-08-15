@@ -12,9 +12,9 @@ static uint64_t __attribute__((aligned(0x1000))) realmode_mem_pd[512];
 static uint64_t __attribute__((aligned(0x1000))) realmode_mem_pt[512];
 
 
-void* paging_set_up_boot_mapping(uint64_t[] old_pml4, uintptr_t kernel_begin_physaddr) {
+void* paging_set_up_boot_mapping(uint64_t *old_pml4, uintptr_t kernel_begin_physaddr) {
 	for(int i = 0; i < 512; i++) {
-		pml4[i] = old_pml4[i]
+		pml4[i] = old_pml4[i];
 	}
 
 	pml4[PAGING_PML4_OFFSET(KERNEL_LINADDR & 0xFFFFFFFFFFFF)] = ((uintptr_t)kernel_pdpt) | PAGING_FLAG_PRESENT | PAGING_FLAG_READ_WRITE;

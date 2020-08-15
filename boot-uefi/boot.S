@@ -1,14 +1,13 @@
-section .text
 
-; void get_pml4();
-global get_pml4
+// void get_pml4();
+.global get_pml4
 get_pml4:
-	mov rax, cr3
+	mov %cr3, %rax
 	ret
 
-; void boot_end()
-global boot_end
+// void boot_end()
+.global boot_end
 boot_end:
-	jmp [kernel_start_addr]
-kernel_start_addr:
-dq 0xFFFFFF0000000000
+	mov %rdi, %cr3
+	mov $0xFFFFFF0000000000, %rax
+	jmp %rax
