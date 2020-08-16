@@ -62,15 +62,17 @@ new_cseg_start:
 	call mmap_sanitize
 	add esp, 4
 
-	call paging_set_up_boot_mapping;
-	mov cr3, eax
-
 	call boot_set_up_gdt64
 	mov ebx, eax
+
+	call paging_set_up_boot_mapping;
+	mov ecx, eax
 
 	mov eax, cr4
 	or eax, (1 << 5)
 	mov cr4, eax
+
+	mov cr3, ecx
 
 	mov ecx, 0xc0000080
 	rdmsr
