@@ -5,9 +5,8 @@ get_pml4:
 	mov %cr3, %rax
 	ret
 
-// void boot_end()
+// void __attribute__((noreturn)) boot_end(void* pml4, void* kernel_addr);
 .global boot_end
 boot_end:
 	mov %rdi, %cr3
-	mov $0xFFFFFF0000000000, %rax
-	jmp %rax
+	jmp *%rsi

@@ -47,11 +47,11 @@ efi_main (EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table) {
 		return status;
 	}
 
-	status = uefi_call_wrapper(file_prot_kernel->Read, 3, file_prot_kernel, 4096*kernel_pages, (void*)kernel_addr);
+	UINTN kernel_buf_size = 4096*kernel_pages;
+	status = uefi_call_wrapper(file_prot_kernel->Read, 3, file_prot_kernel, &kernel_buf_size, (void*)kernel_addr);
 	if (status != EFI_SUCCESS) {
 		return status;
 	}
-
 	Print(L"Loaded kernel: ");
 	Print(((EFI_FILE_INFO*)file_info_buf)->FileName);
 	Print(L"\n");
@@ -71,6 +71,8 @@ efi_main (EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table) {
 		return status;
 	}
 
+
 	void* pml4 = paging_set_up_boot_mapping(get_pml4(), kernel_addr);
-	boot_end(pml4);
+	void* kernel_start_addr = KERNEL_LINADDR + KERNEL_START_OFFSET;
+	boot_end(pml4, kernel_start_addr);
 }
