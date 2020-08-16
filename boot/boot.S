@@ -22,7 +22,6 @@ extern _kernel_start
 
 global _boot_start
 _boot_start:
-	; disable nmi
 	lea esp, [stack_top]
 	mov ebp, esp
 	sub esp, 8		;reserve space on stack
@@ -30,12 +29,14 @@ _boot_start:
 	; -08 MMAP addr
 	mov [ebp-4], ebx
 
+	; disable nmi
 	push eax
 	in al, 0x70
 	or al, 0x80
 	out 0x70, al
 	pop eax
 
+	; check for multiboot2 bootloader
 	cmp eax, 0x36d76289
 	je mb_magic_check_success
 	push dword [str_error_no_multiboot]
@@ -68,17 +69,19 @@ new_cseg_start:
 	call paging_set_up_boot_mapping;
 	mov ecx, eax
 
+	; enter IA-32e mode
+	; enable PAE
 	mov eax, cr4
 	or eax, (1 << 5)
 	mov cr4, eax
-
+	; load page structures
 	mov cr3, ecx
-
+	; enable IA-32e mode
 	mov ecx, 0xc0000080
 	rdmsr
 	or eax, (1 << 8)
 	wrmsr
-
+	; enable paging
 	mov eax, cr0
 	or eax, (1 << 31)
 	mov cr0, eax
