@@ -12,6 +12,19 @@ efi_main (EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table) {
 	EFI_BOOT_SERVICES *bs = system_table->BootServices;
 
 
+	EFI_GUID simple_tout_pguid = EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL_GUID;
+	EFI_SIMPLE_TEXT_OUT_PROTOCOL *simple_tout_prot;
+	status = uefi_call_wrapper(bs->LocateProtocol, 3, &simple_tout_pguid, NULL, &simple_tout_prot);
+	if (status != EFI_SUCCESS) {
+		return status;
+	}
+
+	status = uefi_call_wrapper(simple_tout_prot->ClearScreen, 1, simple_tout_prot);
+	if (status != EFI_SUCCESS) {
+		return status;
+	}
+
+
 	EFI_GUID simple_file_system_pguid = EFI_SIMPLE_FILE_SYSTEM_PROTOCOL_GUID;
 	EFI_SIMPLE_FILE_SYSTEM_PROTOCOL *simple_file_system_prot;
 	status = uefi_call_wrapper(bs->LocateProtocol, 3, &simple_file_system_pguid, NULL, &simple_file_system_prot);
