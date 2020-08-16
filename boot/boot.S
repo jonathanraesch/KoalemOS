@@ -53,6 +53,12 @@ new_cseg_start:
 	mov fs, ax
 	mov gs, ax
 
+	push eax
+	in al, 0x70
+	and al, 0x7f
+	out 0x70, al
+	pop eax
+
 	push dword [ebp-4]
 	call mmap_find
 	add esp, 4
