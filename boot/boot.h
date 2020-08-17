@@ -1,7 +1,6 @@
 #pragma once
 
-extern const char* str_error_no_multiboot;
-extern const char* str_error_no_mmap;
+void* get_pml4();
+void __attribute__((noreturn)) boot_end(void* pml4, void* kernel_addr);
 
-void boot_print(const char* str);
-_Noreturn void boot_error(const char* err_str);
+extern uint8_t _kernel_start_offset;
