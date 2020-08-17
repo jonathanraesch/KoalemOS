@@ -2,7 +2,6 @@ CROSSDIR := /usr/local/x86_64-elf-toolchain
 CC := $(CROSSDIR)/bin/x86_64-elf-gcc
 AS := nasm
 LD := $(CROSSDIR)/bin/x86_64-elf-ld
-LIBC := $(CROSSDIR)/lib/gcc/x86_64-elf/10.2.0
 
 ENVSUBST := envsubst
 
@@ -34,7 +33,7 @@ export KERNELBINDIR
 all: $(BINARY)
 
 $(BINARY): $(OBJS) $(LDSCRIPT)
-	$(LD) -n -L $(LIBC) -lgcc -T $(LDSCRIPT) -o $@ $(OBJS)
+	$(LD) -n -T $(LDSCRIPT) -o $@ $(OBJS)
 
 $(OUTCONFDIR)/%: $(INCONFDIR)/% 
 	mkdir -p $(OUTCONFDIR)
