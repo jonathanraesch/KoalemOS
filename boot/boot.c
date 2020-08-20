@@ -55,7 +55,7 @@ efi_main (EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table) {
 	UINT64 kernel_size = ((EFI_FILE_INFO*)file_info_buf)->FileSize;
 	UINTN kernel_pages = kernel_size/4096 + 1;
 	EFI_PHYSICAL_ADDRESS kernel_addr;
-	status = uefi_call_wrapper(bs->AllocatePages, 4, AllocateAnyPages, EfiLoaderCode, kernel_pages, &kernel_addr);
+	status = uefi_call_wrapper(bs->AllocatePages, 4, AllocateAnyPages, EFI_MEM_TYPE_KERNEL, kernel_pages, &kernel_addr);
 	if (status != EFI_SUCCESS) {
 		return status;
 	}
@@ -68,6 +68,14 @@ efi_main (EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table) {
 	Print(L"Loaded kernel: ");
 	Print(((EFI_FILE_INFO*)file_info_buf)->FileName);
 	Print(L"\n");
+
+	UINTN paging_pages = PAGING_STRUCTS_SIZE/4096 + 1;
+	EFI_PHYSICAL_ADDRESS paging_buf;
+	status = uefi_call_wrapper(bs->AllocatePages, 4, AllocateAnyPages, EFI_MEM_TYPE_KERNEL, paging_pages, &paging_buf);
+	if (status != EFI_SUCCESS) {
+		return status;
+	}
+	paging_set_up_boot_mapping((void*)paging_buf, get_pml4(), kernel_addr);
 
 	UINTN mmap[1000];
 	UINTN mmap_buf_size = sizeof(UINTN)*1000;
@@ -85,6 +93,5 @@ efi_main (EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table) {
 	}
 
 
-	void* pml4 = paging_set_up_boot_mapping(get_pml4(), kernel_addr);
-	boot_end(pml4, (void*)KERNEL_LINADDR);
+	boot_end((void*)paging_buf, (void*)KERNEL_LINADDR);
 }
