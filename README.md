@@ -16,7 +16,8 @@ KoalemOS is a hobby project to explore OS development.
 ## ToDo
 
 * verify build requirements
-* set up kernel stack
+* set up dynamic kernel stack
+* do bounds checking on initial static kernel stack
 * set up IDT
 * make graphical output capabilities available to kernel
 * create memory manager(s)

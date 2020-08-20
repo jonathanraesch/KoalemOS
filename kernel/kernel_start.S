@@ -12,6 +12,9 @@ kernel_gdt_jmp_target:
 resb 10
 ;	dq kernel_gdt_loaded
 ;	dw 0x08
+stack_bottom:
+resb 0x100000
+stack_top:
 
 section .text
 
@@ -43,5 +46,9 @@ _kernel_start:
 	lgdt [rbx]
 	jmp qword far [rax]
 kernel_gdt_loaded:
+
+	; load initial stack:
+	mov rsp, stack_top
+
 kloop:
 	jmp kloop
