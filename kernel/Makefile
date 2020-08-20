@@ -19,7 +19,7 @@ SRCS := $(foreach srctype, $(SRCTYPES), $(shell find $(KERNELSRCDIR) -name *$(sr
 OBJS := $(SRCS:$(srcdir)/%=$(BINDIR)/%.o)
 DEPS := $(OBJS:%.o=%.d)
 
-BINARY := $(BINDIR)/koalemos.elf
+BINARY := $(BINDIR)/koalemos.bin
 LDSCRIPT := $(OUTCONFDIR)/linker.ld
 
 export KERNELBINDIR

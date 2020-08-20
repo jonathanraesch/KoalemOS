@@ -16,8 +16,6 @@ UEFISRCS := $(foreach srctype, $(SRCTYPES), $(shell find $(UEFISRCDIR) -name *$(
 UEFIOBJS := $(UEFISRCS:$(UEFISRCDIR)/%=$(UEFIBUILDDIR)/%.o)
 UEFIDEPS := $(UEFIOBJS:%.o=%.d)
 
-KERNEL_OFFSET_SCRIPT := $(UEFISRCDIR)/get_koffset.sh
-
 
 $(UEFIBINARY): $(UEFIBUILDDIR)/boot.so
 	mkdir -p $(dir $@)
@@ -27,6 +25,6 @@ $(UEFIBUILDDIR)/boot.so: $(UEFIOBJS)
 	mkdir -p $(dir $@)
 	$(UEFILD) $^ $(EFILIBDIR)/crt0-efi-x86_64.o $(UEFILDFLAGS) -o $@
 
-$(UEFIBUILDDIR)/%.o: $(UEFISRCDIR)/% $(BINARY)
+$(UEFIBUILDDIR)/%.o: $(UEFISRCDIR)/%
 	mkdir -p $(dir $@)
-	$(KERNEL_OFFSET_SCRIPT) $(BINARY) | xargs $(UEFICC) $< $(UEFICFLAGS) -MMD -MF $(@:%.o=%.d) -o $@
+	$(UEFICC) $< $(UEFICFLAGS) -MMD -MF $(@:%.o=%.d) -o $@

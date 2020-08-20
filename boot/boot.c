@@ -39,7 +39,7 @@ efi_main (EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table) {
 	}
 
 	EFI_FILE_PROTOCOL *file_prot_kernel;
-	status = uefi_call_wrapper(file_prot_root->Open, 5, file_prot_root, &file_prot_kernel, L"\\EFI\\BOOT\\koalemos.elf", EFI_FILE_MODE_READ, 0);
+	status = uefi_call_wrapper(file_prot_root->Open, 5, file_prot_root, &file_prot_kernel, L"\\EFI\\BOOT\\koalemos.bin", EFI_FILE_MODE_READ, 0);
 	if (status != EFI_SUCCESS) {
 		return status;
 	}
@@ -86,6 +86,5 @@ efi_main (EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table) {
 
 
 	void* pml4 = paging_set_up_boot_mapping(get_pml4(), kernel_addr);
-	void* kernel_start_addr = KERNEL_LINADDR + KERNEL_START_OFFSET;
-	boot_end(pml4, kernel_start_addr);
+	boot_end(pml4, (void*)KERNEL_LINADDR);
 }
