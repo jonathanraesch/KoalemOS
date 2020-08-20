@@ -41,9 +41,10 @@ _kernel_start:
 	mov ax, 16
 	mov [rbx], ax
 
-	;load gdt
+	; load gdt
 	lea rax, [rel kernel_gdt_jmp_target]
 	lgdt [rbx]
+	; load CS
 	jmp qword far [rax]
 kernel_gdt_loaded:
 
