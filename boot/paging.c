@@ -39,8 +39,3 @@ void* paging_set_up_boot_mapping(uint64_t *old_pml4, uintptr_t kernel_begin_phys
 
 	return pml4;
 }
-
-
-void tst() {
-
-}
