@@ -24,3 +24,4 @@ KoalemOS is a hobby project to explore OS development.
   * add memory typing using PAT/MTRRs
   * add code to edit page structures
 * check 64bit absolute adressing (labels seems to be off by 128bytes)
+* check header file dependency management in Makefile
