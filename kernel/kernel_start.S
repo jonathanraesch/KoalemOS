@@ -20,6 +20,9 @@ section .text
 
 global _kernel_start
 _kernel_start:
+	; load initial stack:
+	mov rsp, stack_top
+
 	; set up far jump target
 	lea rbx, [rel kernel_gdt_jmp_target]
 	lea rax, [rel kernel_gdt_loaded]
@@ -47,9 +50,6 @@ _kernel_start:
 	; load CS
 	jmp qword far [rax]
 kernel_gdt_loaded:
-
-	; load initial stack:
-	mov rsp, stack_top
 
 kloop:
 	jmp kloop
