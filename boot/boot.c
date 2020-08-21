@@ -93,5 +93,6 @@ efi_main (EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table) {
 	}
 
 
-	boot_end((void*)paging_buf, (void*)KERNEL_LINADDR);
+	efi_mmap_data mmap_data = {.descriptors = mmap, .mmap_size=mmap_buf_size, .descriptor_size=descr_size};
+	boot_end((void*)paging_buf, (void*)KERNEL_LINADDR, &mmap_data);
 }

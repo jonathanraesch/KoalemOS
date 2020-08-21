@@ -16,12 +16,17 @@ stack_bottom:
 resb 0x100000
 stack_top:
 
+
 section .text
+
+extern init_mmap
 
 global _kernel_start
 _kernel_start:
 	; load initial stack:
 	mov rsp, stack_top
+
+	push rdx ; efi_mmap_data
 
 	; set up far jump target
 	lea rbx, [rel kernel_gdt_jmp_target]
@@ -50,6 +55,9 @@ _kernel_start:
 	; load CS
 	jmp qword far [rax]
 kernel_gdt_loaded:
+
+	pop rdi
+	call init_mmap
 
 kloop:
 	jmp kloop

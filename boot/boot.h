@@ -1,6 +1,6 @@
 #pragma once
+#include "mmap_common.h"
 
-#define EFI_MEM_TYPE_KERNEL 0x80000000
 
 void* get_pml4();
-void __attribute__((noreturn)) boot_end(void* pml4, void* kernel_addr);
+void __attribute__((noreturn)) boot_end(void* pml4, void* kernel_addr, efi_mmap_data* mmap_data);
