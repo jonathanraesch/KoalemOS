@@ -26,3 +26,5 @@ KoalemOS is a hobby project to explore OS development.
   * add code to edit page structures
 * check header file dependency management in Makefile
 * clean up/codify interface between bootloader and kernel
+* add tests
+* extend debugging support
