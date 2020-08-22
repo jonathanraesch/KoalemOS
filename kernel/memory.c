@@ -37,6 +37,10 @@ typedef enum {
 memory_range _phys_mmap_range_buf[PHYS_MMAP_MAX_RANGE_COUNT];
 memory_map phys_mmap = {.memory_ranges=_phys_mmap_range_buf, .range_count=0, .max_range_count=PHYS_MMAP_MAX_RANGE_COUNT};
 
+#define PHYS_ALLOC_MAP_MAX_RANGE_COUNT 1000
+memory_range _phys_alloc_map_range_buf[PHYS_ALLOC_MAP_MAX_RANGE_COUNT];
+memory_map phys_alloc_map = {.memory_ranges=_phys_alloc_map_range_buf, .range_count=0, .max_range_count=PHYS_ALLOC_MAP_MAX_RANGE_COUNT};
+
 
 void init_mmap(efi_mmap_data* mmap_data) {
 	void *cur_desc_ptr =  mmap_data->descriptors;
@@ -62,4 +66,27 @@ void init_mmap(efi_mmap_data* mmap_data) {
 
 		cur_desc_ptr += mmap_data->descriptor_size;
 	}
+}
+
+
+int alloc_phys_pages(uint64_t pages) {
+	if(void* base_addr = mmap_get_pages(&phys_mmap, pages)) {
+		if(mmap_add_range(&phys_alloc_map, base_addr, pages)) {
+			return base_addr;
+		}
+	}
+	return false;
+}
+
+int free_phys_pages(void* base_addr) {
+	if(uint64_t pages = mmap_get_range(&phys_alloc_map, base_addr)) {
+		if(mmap_add_range_merge(&phys_mmap, base_addr, pages)) {
+			return true;
+		}
+		if(mmap_add_range(&phys_alloc_map, base_addr, pages)) {
+			return false;
+		}
+		kernel_panic();
+	}
+	return false;
 }
