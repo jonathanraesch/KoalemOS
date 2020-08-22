@@ -1,5 +1,7 @@
 #include "memory.h"
 #include "kernel.h"
+#include "mmap.h"
+#include <stdbool.h>
 
 
 typedef struct __attribute__((__packed__)) {
@@ -31,21 +33,9 @@ typedef enum {
 } EFI_MEMORY_TYPE;
 
 
-typedef struct {
-	uint64_t base_addr;
-	uint64_t pages;
-} memory_range;
-
-typedef struct {
-	memory_range* memory_ranges;
-	uint64_t range_count;
-} memory_map;
-
-
-#define MMAP_MAX_RANGE_COUNT 1000
-
-memory_range _mem_range_buf[MMAP_MAX_RANGE_COUNT];
-memory_map mmap = {.memory_ranges=_mem_range_buf, .range_count=0};
+#define PHYS_MMAP_MAX_RANGE_COUNT 1000
+memory_range _phys_mmap_range_buf[PHYS_MMAP_MAX_RANGE_COUNT];
+memory_map phys_mmap = {.memory_ranges=_phys_mmap_range_buf, .range_count=0, .max_range_count=PHYS_MMAP_MAX_RANGE_COUNT};
 
 
 void init_mmap(efi_mmap_data* mmap_data) {
@@ -62,12 +52,9 @@ void init_mmap(efi_mmap_data* mmap_data) {
 			case EfiBootServicesData:
 			case EfiConventionalMemory:
 			case EfiPersistentMemory:
-				if(mmap.range_count >= MMAP_MAX_RANGE_COUNT) {
+				if(mmap_add_range(&phys_mmap, cur_desc.PhysicalStart, cur_desc.NumberOfPages)) {
 					kernel_panic();
 				}
-				memory_range range = {.base_addr=cur_desc.PhysicalStart, .pages=cur_desc.NumberOfPages};
-				mmap.memory_ranges[mmap.range_count] = range;
-				mmap.range_count++;
 				break;
 			default:
 				break;
