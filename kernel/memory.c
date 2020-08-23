@@ -1,7 +1,11 @@
 #include "memory.h"
 #include "kernel.h"
 #include "mmap.h"
+#include "../boot/paging_common.h"
 #include <stdbool.h>
+
+
+extern void invalidate_tlbs_for(void* vaddr);
 
 
 typedef struct __attribute__((__packed__)) {
@@ -91,4 +95,53 @@ int free_phys_pages(void* base_addr) {
 		kernel_panic();
 	}
 	return false;
+}
+
+
+#define PML4E_ADDR_OF(VADDR) ((uint64_t*)(0xFFFFFFFFFFFFF000 | ((uintptr_t)(VADDR)&0xFF8000000000) >> 39))
+#define PDPTE_ADDR_OF(VADDR) ((uint64_t*)(0xFFFFFFFFFFE00000 | ((uintptr_t)(VADDR)&0xFF8000000000) >> 27 | ((uintptr_t)(VADDR)&0x7FC0000000) >> 30))
+#define PDE_ADDR_OF(VADDR)   ((uint64_t*)(0xFFFFFFFFC0000000 | ((uintptr_t)(VADDR)&0xFF8000000000) >> 18 | ((uintptr_t)(VADDR)&0x7FC0000000) >> 18 | ((uintptr_t)(VADDR)&0x3FE00000) >> 21))
+#define PTE_ADDR_OF(VADDR)   ((uint64_t*)(0xFFFFFF8000000000 | ((uintptr_t)(VADDR)&0xFF8000000000) >>  9 | ((uintptr_t)(VADDR)&0x7FC0000000) >>  9 | ((uintptr_t)(VADDR)&0x3FE00000) >>  9 | ((uintptr_t)(VADDR)&0x1FF000) >> 12))
+
+void map_page(void* vaddr, void* paddr, uint64_t flags) {
+	if (!(*PML4E_ADDR_OF(vaddr) & PAGING_FLAG_PRESENT)) {
+		uint64_t* pdpt_addr = alloc_phys_pages(1);
+		if(pdpt_addr) {
+			for(int i = 0; i < 512; i++) {
+				pdpt_addr[i] = 0;
+			}
+			*PML4E_ADDR_OF(vaddr) = (uintptr_t)pdpt_addr | PAGING_FLAG_PRESENT | flags;
+		} else {
+			kernel_panic();
+		}
+	}
+	if (!(*PDPTE_ADDR_OF(vaddr) & PAGING_FLAG_PRESENT)) {
+		uint64_t* pde_addr = alloc_phys_pages(1);
+		if(pde_addr) {
+			for(int i = 0; i < 512; i++) {
+				pde_addr[i] = 0;
+			}
+			*PDPTE_ADDR_OF(vaddr) = (uintptr_t)pde_addr | PAGING_FLAG_PRESENT | flags;
+		} else {
+			kernel_panic();
+		}
+	}
+	if (!(*PDE_ADDR_OF(vaddr) & PAGING_FLAG_PRESENT)) {
+		uint64_t* pte_addr = alloc_phys_pages(1);
+		if(pte_addr) {
+			for(int i = 0; i < 512; i++) {
+				pte_addr[i] = 0;
+			}
+			*PDE_ADDR_OF(vaddr) = (uintptr_t)pte_addr | PAGING_FLAG_PRESENT | flags;
+		} else {
+			kernel_panic();
+		}
+	}
+	*PTE_ADDR_OF(vaddr) = (uintptr_t)paddr | PAGING_FLAG_PRESENT | flags;
+
+	invalidate_tlbs_for(vaddr);
+}
+
+void unmap_page(void* vaddr) {
+	*PTE_ADDR_OF(vaddr) = 0;
 }

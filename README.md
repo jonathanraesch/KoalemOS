@@ -23,7 +23,6 @@ KoalemOS is a hobby project to explore OS development.
 * create memory manager(s)
 * expand paging support
   * add memory typing using PAT/MTRRs
-  * add code to edit page structures
 * check header file dependency management in Makefile
 * clean up/codify interface between bootloader and kernel
 * add tests
