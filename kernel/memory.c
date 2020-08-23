@@ -46,33 +46,6 @@ memory_range _phys_alloc_map_range_buf[PHYS_ALLOC_MAP_MAX_RANGE_COUNT];
 memory_map phys_alloc_map = {.memory_ranges=_phys_alloc_map_range_buf, .range_count=0, .max_range_count=PHYS_ALLOC_MAP_MAX_RANGE_COUNT};
 
 
-void init_mmap(efi_mmap_data* mmap_data) {
-	void *cur_desc_ptr =  mmap_data->descriptors;
-	const void *efi_mmap_end = mmap_data->descriptors + mmap_data->mmap_size;
-
-	while(cur_desc_ptr < efi_mmap_end) {
-
-		EFI_MEMORY_DESCRIPTOR cur_desc = *((EFI_MEMORY_DESCRIPTOR*)cur_desc_ptr);
-		switch(cur_desc.Type) {
-			case EfiLoaderCode:
-			case EfiLoaderData:
-			case EfiBootServicesCode:
-			case EfiBootServicesData:
-			case EfiConventionalMemory:
-			case EfiPersistentMemory:
-				if(mmap_add_range(&phys_mmap, (void*)cur_desc.PhysicalStart, cur_desc.NumberOfPages)) {
-					kernel_panic();
-				}
-				break;
-			default:
-				break;
-		}
-
-		cur_desc_ptr += mmap_data->descriptor_size;
-	}
-}
-
-
 void* alloc_phys_pages(uint64_t pages) {
 	void* base_addr = mmap_get_pages(&phys_mmap, pages);
 	if(base_addr) {
@@ -146,4 +119,46 @@ void unmap_page(void* vaddr) {
 	*PTE_ADDR_OF(vaddr) = 0;
 
 	invalidate_tlbs_for(vaddr);
+}
+
+
+void init_mmap(efi_mmap_data* mmap_data) {
+	void *cur_desc_ptr =  mmap_data->descriptors;
+	const void *efi_mmap_end = mmap_data->descriptors + mmap_data->mmap_size;
+
+	while(cur_desc_ptr < efi_mmap_end) {
+
+		EFI_MEMORY_DESCRIPTOR cur_desc = *((EFI_MEMORY_DESCRIPTOR*)cur_desc_ptr);
+		switch(cur_desc.Type) {
+			case EfiLoaderCode:
+			case EfiLoaderData:
+			case EfiBootServicesCode:
+			case EfiBootServicesData:
+			case EfiConventionalMemory:
+			case EfiPersistentMemory:
+				if(mmap_add_range(&phys_mmap, (void*)cur_desc.PhysicalStart, cur_desc.NumberOfPages)) {
+					kernel_panic();
+				}
+				break;
+			default:
+				break;
+		}
+
+		cur_desc_ptr += mmap_data->descriptor_size;
+	}
+
+	for(uintptr_t addr = 0; addr<256*0x8000000000; addr+=0x8000000000) {
+		if (addr == (KERNEL_LINADDR&0xFFFFFF8000000000)) {
+			continue;
+		}
+		*PML4E_ADDR_OF(addr) = 0;
+		invalidate_tlbs_for((void*)addr);
+	}
+	for(uintptr_t addr = 256*0x8000000000; addr<511*0x8000000000; addr+=0x8000000000) {
+		if (addr == (KERNEL_LINADDR&0xFFFFFF8000000000)) {
+			continue;
+		}
+		*PML4E_ADDR_OF(addr) = 0;
+		invalidate_tlbs_for((void*)addr);
+	}
 }

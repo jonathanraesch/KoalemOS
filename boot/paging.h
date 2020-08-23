@@ -3,10 +3,6 @@
 #include <stdint.h>
 
 
-#define KERNEL_LINADDR 0xFFFFFF0000000000
-#define REALMODE_MEM_LINADDR 0xFFFF800000000000
-
-
 #define PML4_SIZE 0x1000
 #define PDPT_SIZE 0x1000
 #define PD_SIZE 0x1000
