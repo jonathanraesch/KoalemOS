@@ -144,4 +144,6 @@ void map_page(void* vaddr, void* paddr, uint64_t flags) {
 
 void unmap_page(void* vaddr) {
 	*PTE_ADDR_OF(vaddr) = 0;
+
+	invalidate_tlbs_for(vaddr);
 }
