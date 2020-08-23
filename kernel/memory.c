@@ -56,7 +56,7 @@ void init_mmap(efi_mmap_data* mmap_data) {
 			case EfiBootServicesData:
 			case EfiConventionalMemory:
 			case EfiPersistentMemory:
-				if(mmap_add_range(&phys_mmap, cur_desc.PhysicalStart, cur_desc.NumberOfPages)) {
+				if(mmap_add_range(&phys_mmap, (void*)cur_desc.PhysicalStart, cur_desc.NumberOfPages)) {
 					kernel_panic();
 				}
 				break;
@@ -69,17 +69,19 @@ void init_mmap(efi_mmap_data* mmap_data) {
 }
 
 
-int alloc_phys_pages(uint64_t pages) {
-	if(void* base_addr = mmap_get_pages(&phys_mmap, pages)) {
+void* alloc_phys_pages(uint64_t pages) {
+	void* base_addr = mmap_get_pages(&phys_mmap, pages);
+	if(base_addr) {
 		if(mmap_add_range(&phys_alloc_map, base_addr, pages)) {
 			return base_addr;
 		}
 	}
-	return false;
+	return 0;
 }
 
 int free_phys_pages(void* base_addr) {
-	if(uint64_t pages = mmap_get_range(&phys_alloc_map, base_addr)) {
+	uint64_t pages = mmap_get_range(&phys_alloc_map, base_addr);
+	if(pages) {
 		if(mmap_add_range_merge(&phys_mmap, base_addr, pages)) {
 			return true;
 		}
