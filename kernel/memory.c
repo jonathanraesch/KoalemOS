@@ -2,6 +2,7 @@
 #include "kernel.h"
 #include "mmap.h"
 #include "../boot/paging_common.h"
+#include "../boot/mmap_common.h"
 #include <stdbool.h>
 
 
