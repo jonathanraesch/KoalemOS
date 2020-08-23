@@ -6,7 +6,7 @@ LD := $(CROSSDIR)/bin/x86_64-elf-ld
 ENVSUBST := envsubst
 
 KERNELASFLAGS := -w+all -f elf64
-KERNELCFLAGS := -Wall -mcmodel=large -ffreestanding -O0 -nostdlib -mno-red-zone -masm=intel -fno-asynchronous-unwind-tables
+KERNELCFLAGS := -std=c11 -pedantic-errors -Wall -mcmodel=large -ffreestanding -O0 -nostdlib -mno-red-zone -masm=intel -fno-asynchronous-unwind-tables
 
 BINDIR := $(BUILDDIR)/bin
 KERNELBINDIR := $(BINDIR)/kernel

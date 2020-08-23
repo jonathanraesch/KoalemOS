@@ -125,7 +125,7 @@ void unmap_page(void* vaddr) {
 
 void init_mmap(efi_mmap_data* mmap_data) {
 	void *cur_desc_ptr =  mmap_data->descriptors;
-	const void *efi_mmap_end = mmap_data->descriptors + mmap_data->mmap_size;
+	const void *efi_mmap_end = (void*)((uintptr_t)mmap_data->descriptors + mmap_data->mmap_size);
 
 	while(cur_desc_ptr < efi_mmap_end) {
 
@@ -145,7 +145,7 @@ void init_mmap(efi_mmap_data* mmap_data) {
 				break;
 		}
 
-		cur_desc_ptr += mmap_data->descriptor_size;
+		cur_desc_ptr = (void*)((uintptr_t)cur_desc_ptr + mmap_data->descriptor_size);
 	}
 
 	for(uintptr_t addr = 0; addr<256*0x8000000000; addr+=0x8000000000) {

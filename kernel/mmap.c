@@ -6,7 +6,7 @@ int mmap_add_range_merge(memory_map* mmap, void* base_addr, uint64_t pages) {
 	if(pages == 0) {
 		return false;
 	}
-	void* merge_addr = base_addr + 4096*pages;
+	void* merge_addr = (void*)((uintptr_t)base_addr + 4096*pages);
 	for(int i = 0; i < mmap->range_count; i++) {
 		if(mmap->memory_ranges[i].base_addr == merge_addr) {
 			mmap->memory_ranges[i].base_addr = base_addr;
@@ -42,7 +42,7 @@ void* mmap_get_pages(memory_map* mmap, uint64_t pages) {
 		}
 		if(mmap->memory_ranges[i].pages > pages) {
 			void* base_addr = mmap->memory_ranges[i].base_addr;
-			mmap->memory_ranges[i].base_addr += 4096*pages;
+			mmap->memory_ranges[i].base_addr = (void*)((uintptr_t)mmap->memory_ranges[i].base_addr + 4096*pages);
 			mmap->memory_ranges[i].pages -= pages;
 			return base_addr;
 		}
