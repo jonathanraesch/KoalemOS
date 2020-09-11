@@ -52,6 +52,7 @@ void* alloc_phys_pages(uint64_t pages) {
 	return 0;
 }
 
+// TODO: if feasible, resize memory map after merge
 int free_phys_pages(void* base_addr, uint64_t count) {
 	if(mmap_add_range_merge(&phys_mmap, base_addr, count)) {
 		return true;
@@ -109,6 +110,7 @@ void map_page(void* vaddr, void* paddr, uint64_t flags) {
 	invalidate_tlbs_for(vaddr);
 }
 
+// TODO: fix memory leak
 void unmap_page(void* vaddr) {
 	*PTE_ADDR_OF(vaddr) = 0;
 

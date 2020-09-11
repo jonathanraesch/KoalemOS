@@ -21,6 +21,7 @@ KoalemOS is a hobby project to explore OS development.
 * set up IDT
 * make graphical output capabilities available to kernel
 * create memory manager(s)
+* fix memory leak from paging structures (if feasible, also from physical memory map)
 * expand paging support
   * add memory typing using PAT/MTRRs
 * check header file dependency management in Makefile
