@@ -18,4 +18,8 @@ SECTIONS {
            ${KERNELBINDIR}/*(COMMON)
            ${KERNELBINDIR}/*(.bss)
          }
+         .phys_mmap BLOCK(4K) : {
+           */(PHYS_MMAP)
+           . = 0x8000000; /* reserve memory to handle up to 64GiB physical memory in 1-page regions */
+         }
 }

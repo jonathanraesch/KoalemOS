@@ -7,6 +7,7 @@
 
 
 extern void invalidate_tlbs_for(void* vaddr);
+void map_page(void* vaddr, void* paddr, uint64_t flags);
 
 
 typedef struct __attribute__((__packed__)) {
@@ -38,35 +39,27 @@ typedef enum {
 } EFI_MEMORY_TYPE;
 
 
-#define PHYS_MMAP_MAX_RANGE_COUNT 1000
-memory_range _phys_mmap_range_buf[PHYS_MMAP_MAX_RANGE_COUNT];
-memory_map phys_mmap = {.memory_ranges=_phys_mmap_range_buf, .range_count=0, .max_range_count=PHYS_MMAP_MAX_RANGE_COUNT};
-
-#define PHYS_ALLOC_MAP_MAX_RANGE_COUNT 1000
-memory_range _phys_alloc_map_range_buf[PHYS_ALLOC_MAP_MAX_RANGE_COUNT];
-memory_map phys_alloc_map = {.memory_ranges=_phys_alloc_map_range_buf, .range_count=0, .max_range_count=PHYS_ALLOC_MAP_MAX_RANGE_COUNT};
-
+#define PHYS_MMAP_INIT_MAX_RANGE_COUNT (0x1000 / sizeof(memory_range))
+_Static_assert (!((PHYS_MMAP_INIT_MAX_RANGE_COUNT * sizeof(memory_range)) & 0xfff), "physcial memory map not page-aligned");
+memory_range _phys_mmap_range_buf[PHYS_MMAP_INIT_MAX_RANGE_COUNT] __attribute__ ((section ("PHYS_MMAP"))) = {0};
+memory_map phys_mmap = {.memory_ranges=_phys_mmap_range_buf, .range_count=0, .max_range_count=PHYS_MMAP_INIT_MAX_RANGE_COUNT};
 
 void* alloc_phys_pages(uint64_t pages) {
 	void* base_addr = mmap_get_pages(&phys_mmap, pages);
 	if(base_addr) {
-		if(mmap_add_range(&phys_alloc_map, base_addr, pages)) {
-			return base_addr;
-		}
+		return base_addr;
 	}
 	return 0;
 }
 
-int free_phys_pages(void* base_addr) {
-	uint64_t pages = mmap_get_range(&phys_alloc_map, base_addr);
-	if(pages) {
-		if(mmap_add_range_merge(&phys_mmap, base_addr, pages)) {
-			return true;
-		}
-		if(mmap_add_range(&phys_alloc_map, base_addr, pages)) {
-			return false;
-		}
-		kernel_panic();
+int free_phys_pages(void* base_addr, uint64_t count) {
+	if(mmap_add_range_merge(&phys_mmap, base_addr, count)) {
+		return true;
+	}
+	if(base_addr) {
+		map_page(phys_mmap.memory_ranges + phys_mmap.max_range_count, base_addr, 0);
+		phys_mmap.max_range_count += 0x1000 / sizeof(memory_range);
+		return true;
 	}
 	return false;
 }
