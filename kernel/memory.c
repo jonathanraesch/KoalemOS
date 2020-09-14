@@ -132,6 +132,13 @@ void init_mmap(efi_mmap_data* mmap_data) {
 			case EfiBootServicesData:
 			case EfiConventionalMemory:
 			case EfiPersistentMemory:
+				if(cur_desc.PhysicalStart == 0) {
+					if(cur_desc.NumberOfPages < 2u) {
+						break;
+					}
+					cur_desc.NumberOfPages -= 1;
+					cur_desc.PhysicalStart += 0x1000;
+				}
 				if(!mmap_add_range(&phys_mmap, (void*)cur_desc.PhysicalStart, cur_desc.NumberOfPages)) {
 					kernel_panic();
 				}
