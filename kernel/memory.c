@@ -71,14 +71,20 @@ int free_phys_pages(void* base_addr, uint64_t count) {
 #define PDE_ADDR_OF(VADDR)   ((uint64_t*)(0xFFFFFFFFC0000000 | ((uintptr_t)(VADDR)&0xFF8000000000) >> 18 | ((uintptr_t)(VADDR)&0x7FC0000000) >> 18 | ((uintptr_t)(VADDR)&0x3FE00000) >> 21))
 #define PTE_ADDR_OF(VADDR)   ((uint64_t*)(0xFFFFFF8000000000 | ((uintptr_t)(VADDR)&0xFF8000000000) >>  9 | ((uintptr_t)(VADDR)&0x7FC0000000) >>  9 | ((uintptr_t)(VADDR)&0x3FE00000) >>  9 | ((uintptr_t)(VADDR)&0x1FF000) >> 12))
 
+// TODO: make address calculation for zeroing structures more readable and/or performant
 void map_page(void* vaddr, void* paddr, uint64_t flags) {
 	if (!(*PML4E_ADDR_OF(vaddr) & PAGING_FLAG_PRESENT)) {
 		uint64_t* pdpt_addr = alloc_phys_pages(1);
 		if(pdpt_addr) {
-			for(int i = 0; i < 512; i++) {
-				pdpt_addr[i] = 0;
-			}
 			*PML4E_ADDR_OF(vaddr) = (uintptr_t)pdpt_addr | PAGING_FLAG_PRESENT | flags;
+			invalidate_tlbs_for(vaddr);
+			invalidate_tlbs_for(PTE_ADDR_OF(vaddr));
+			invalidate_tlbs_for(PDE_ADDR_OF(vaddr));
+			invalidate_tlbs_for(PDPTE_ADDR_OF(vaddr));
+			for(uint64_t i = 0; i < 512; i++) {
+				uint64_t* base_pdpte_addr = (uint64_t*)(((uintptr_t)vaddr&0xFFFFFF8000000000) + 0x40000000*i);
+				*PDPTE_ADDR_OF(base_pdpte_addr) = 0;
+			}
 		} else {
 			kernel_panic();
 		}
@@ -86,10 +92,14 @@ void map_page(void* vaddr, void* paddr, uint64_t flags) {
 	if (!(*PDPTE_ADDR_OF(vaddr) & PAGING_FLAG_PRESENT)) {
 		uint64_t* pde_addr = alloc_phys_pages(1);
 		if(pde_addr) {
-			for(int i = 0; i < 512; i++) {
-				pde_addr[i] = 0;
-			}
 			*PDPTE_ADDR_OF(vaddr) = (uintptr_t)pde_addr | PAGING_FLAG_PRESENT | flags;
+			invalidate_tlbs_for(vaddr);
+			invalidate_tlbs_for(PTE_ADDR_OF(vaddr));
+			invalidate_tlbs_for(PDE_ADDR_OF(vaddr));
+			for(uint64_t i = 0; i < 512; i++) {
+				uint64_t* base_pde_addr = (uint64_t*)(((uintptr_t)vaddr&0xFFFFFFFFC0000000) + 0x200000*i);
+				*PDE_ADDR_OF(base_pde_addr) = 0;
+			}
 		} else {
 			kernel_panic();
 		}
@@ -97,10 +107,13 @@ void map_page(void* vaddr, void* paddr, uint64_t flags) {
 	if (!(*PDE_ADDR_OF(vaddr) & PAGING_FLAG_PRESENT)) {
 		uint64_t* pte_addr = alloc_phys_pages(1);
 		if(pte_addr) {
-			for(int i = 0; i < 512; i++) {
-				pte_addr[i] = 0;
-			}
 			*PDE_ADDR_OF(vaddr) = (uintptr_t)pte_addr | PAGING_FLAG_PRESENT | flags;
+			invalidate_tlbs_for(vaddr);
+			invalidate_tlbs_for(PTE_ADDR_OF(vaddr));
+			for(uint64_t i = 0; i < 512; i++) {
+				uint64_t* base_pte_addr = (uint64_t*)(((uintptr_t)vaddr&0xFFFFFFFFFFE00000) + 0x1000*i);
+				*PTE_ADDR_OF(base_pte_addr) = 0;
+			}
 		} else {
 			kernel_panic();
 		}
