@@ -39,10 +39,26 @@ typedef enum {
 } EFI_MEMORY_TYPE;
 
 
+typedef struct _heap_entry {
+	size_t size;
+	bool used;
+	struct _heap_entry* last;
+	struct _heap_entry* next;
+	max_align_t memory[];
+} heap_entry;
+
+
 #define PHYS_MMAP_INIT_MAX_RANGE_COUNT (0x1000 / sizeof(memory_range))
 _Static_assert (!((PHYS_MMAP_INIT_MAX_RANGE_COUNT * sizeof(memory_range)) & 0xfff), "physcial memory map not page-aligned");
 memory_range _phys_mmap_range_buf[PHYS_MMAP_INIT_MAX_RANGE_COUNT] __attribute__ ((section ("PHYS_MMAP"))) = {0};
 memory_map phys_mmap = {.memory_ranges=_phys_mmap_range_buf, .range_count=0, .max_range_count=PHYS_MMAP_INIT_MAX_RANGE_COUNT};
+
+#define KERNEL_HEAP_INIT_SIZE 0x1000
+max_align_t kernel_heap_start[KERNEL_HEAP_INIT_SIZE] __attribute__ ((section ("KERNEL_HEAP"))) = {0};
+max_align_t* kernel_heap_end = kernel_heap_start + KERNEL_HEAP_INIT_SIZE;
+heap_entry* first_heap_entry;
+heap_entry* last_heap_entry;
+
 
 void* alloc_phys_pages(uint64_t pages) {
 	void* base_addr = mmap_get_pages(&phys_mmap, pages);
@@ -176,5 +192,88 @@ void init_mmap(efi_mmap_data* mmap_data) {
 		}
 		*PML4E_ADDR_OF(addr) = 0;
 		invalidate_tlbs_for((void*)addr);
+	}
+}
+
+void init_heap() {
+	last_heap_entry = (heap_entry*)kernel_heap_start;
+	*last_heap_entry = (heap_entry){
+		.size = KERNEL_HEAP_INIT_SIZE-sizeof(heap_entry),
+		.used = false,
+		.last = 0, .next = 0
+	};
+	first_heap_entry = last_heap_entry;
+}
+
+void init_memory_management(efi_mmap_data* mmap_data) {
+	init_mmap(mmap_data);
+	init_heap();
+}
+
+
+void* kmalloc(size_t size) {
+	heap_entry* entry = first_heap_entry;
+
+	while(entry) {
+		if(!entry->used && entry->size >= size) {
+			break;
+		}
+		entry = entry->next;
+	}
+
+	if(!entry) {
+		uint64_t page_count = (size + sizeof(heap_entry)) / 0x1000 + 1;
+		void* paddr = alloc_phys_pages(page_count);
+		if(!paddr) {
+			kernel_panic();
+		}
+		map_page(kernel_heap_end, paddr, PAGING_FLAG_READ_WRITE);
+		entry = (heap_entry*)kernel_heap_end;
+		*entry = (heap_entry){
+			.size = 0x1000*page_count - sizeof(heap_entry),
+			.last = last_heap_entry, .next = 0,
+		};
+		kernel_heap_end += (page_count*0x1000)/sizeof(max_align_t);
+	}
+	entry->used = true;
+
+	if(entry->size > size+sizeof(heap_entry)+sizeof(max_align_t)) {
+		heap_entry* next_entry = (heap_entry*)((uintptr_t)entry->memory + size);
+		*next_entry = (heap_entry){
+			.size = entry->size - (size + sizeof(heap_entry)),
+			.used = false,
+			.last = entry, .next = entry->next,
+		};
+		entry->size -= (size + sizeof(heap_entry));
+		if(entry->next) {
+			entry->next->last = next_entry;
+		}
+		entry->next = next_entry;
+	}
+
+	return (void*)entry->memory;
+}
+
+void kfree(void* ptr) {
+	heap_entry* entry = (heap_entry*)((uintptr_t)ptr - sizeof(heap_entry));
+	entry->used = false;
+	if(entry->last) {
+		if(!entry->last->used && (uintptr_t)entry->last->memory + entry->last->size == (uintptr_t)entry) {
+			entry->last->size += sizeof(heap_entry) + entry->size;
+			if(entry->next) {
+				entry->next->last = entry->last;
+			}
+			entry->last->next = entry->next;
+			entry = entry->last;
+		}
+	}
+	if(entry->next) {
+		if(!entry->next->used && (uintptr_t)entry->memory + entry->size == (uintptr_t)entry->next) {
+			entry->size += sizeof(heap_entry) + entry->next->size;
+			entry->next = entry->next->next;
+			if(entry->next) {
+				entry->next->last = entry;
+			}
+		}
 	}
 }

@@ -19,7 +19,7 @@ stack_top:
 
 section .text
 
-extern init_mmap
+extern init_memory_management
 
 global _kernel_start
 _kernel_start:
@@ -57,7 +57,7 @@ _kernel_start:
 kernel_gdt_loaded:
 
 	pop rdi
-	call init_mmap
+	call init_memory_management
 
 kloop:
 	jmp kloop

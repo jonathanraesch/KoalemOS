@@ -22,4 +22,7 @@ SECTIONS {
            */(PHYS_MMAP)
            . = 0x8000000; /* reserve memory to handle up to 64GiB physical memory in 1-page regions */
          }
+         .kernel_heap BLOCK(4K) : {
+           */(KERNEL_HEAP)
+         }
 }
