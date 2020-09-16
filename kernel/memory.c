@@ -58,7 +58,7 @@ int free_phys_pages(void* base_addr, uint64_t count) {
 		return true;
 	}
 	if(base_addr) {
-		map_page(phys_mmap.memory_ranges + phys_mmap.max_range_count, base_addr, 0);
+		map_page(phys_mmap.memory_ranges + phys_mmap.max_range_count, base_addr, PAGING_FLAG_READ_WRITE);
 		phys_mmap.max_range_count += 0x1000 / sizeof(memory_range);
 		return true;
 	}
