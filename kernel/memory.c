@@ -170,7 +170,7 @@ void init_mmap(efi_mmap_data* mmap_data) {
 		*PML4E_ADDR_OF(addr) = 0;
 		invalidate_tlbs_for((void*)addr);
 	}
-	for(uintptr_t addr = 256*0x8000000000; addr<511*0x8000000000; addr+=0x8000000000) {
+	for(uintptr_t addr = 0xFFFF800000000000; addr<0xFFFFFF8000000000; addr+=0x8000000000) {
 		if (addr == (KERNEL_LINADDR&0xFFFFFF8000000000)) {
 			continue;
 		}
