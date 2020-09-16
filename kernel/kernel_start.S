@@ -20,6 +20,7 @@ stack_top:
 section .text
 
 extern init_memory_management
+extern kernel_post_init_check
 
 global _kernel_start
 _kernel_start:
@@ -58,6 +59,7 @@ kernel_gdt_loaded:
 
 	pop rdi
 	call init_memory_management
+	call kernel_post_init_check
 
 kloop:
 	jmp kloop
