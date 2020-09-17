@@ -4,14 +4,10 @@ KoalemOS is a hobby project to explore OS development.
 
 ## Build Requirements
 
-* bochs
-* bochs-sdl
 * qemu-system-x86_64
 * ovmf
 * x86_64-cross-toolchain
 * mtools
-* grub-pc-bin
-* xorriso
 
 ## ToDo
 
