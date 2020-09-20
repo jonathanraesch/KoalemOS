@@ -17,12 +17,12 @@ resb 0x100000
 stack_top:
 
 
-section .text
-
 extern init_memory_management
 extern kernel_post_init_check
 
 global _kernel_start
+
+section .kernel_start_text
 _kernel_start:
 	; load initial stack:
 	mov rsp, stack_top

@@ -5,6 +5,9 @@ SECTIONS {
          /* kernel is located at 255TiB (virtual/linear address) */
          . = 0xFFFFFF0000000000;
 
+         .kernel_start_text BLOCK(4K) : {
+           ${KERNELBINDIR}/*(.kernel_start_text)
+         }
          .kernel_text BLOCK(4K) : {
            ${KERNELBINDIR}/*(.text)
          }
