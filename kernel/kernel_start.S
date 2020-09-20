@@ -17,6 +17,7 @@ resb 0x100000
 stack_top:
 
 
+extern setup_idt
 extern init_memory_management
 extern kernel_post_init_check
 
@@ -24,6 +25,8 @@ global _kernel_start
 
 section .kernel_start_text
 _kernel_start:
+	cli
+
 	; load initial stack:
 	mov rsp, stack_top
 
@@ -56,6 +59,9 @@ _kernel_start:
 	; load CS
 	jmp qword far [rax]
 kernel_gdt_loaded:
+
+	call setup_idt
+	sti
 
 	pop rdi
 	call init_memory_management

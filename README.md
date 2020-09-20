@@ -14,7 +14,6 @@ KoalemOS is a hobby project to explore OS development.
 * verify build requirements
 * set up dynamic kernel stack
 * do bounds checking on initial static kernel stack
-* set up IDT
 * make graphical output capabilities available to kernel
 * fix memory leak from paging structures (if feasible, also from physical memory map)
 * expand paging support
