@@ -24,10 +24,10 @@ UEFIIMGSIZE := 2880
 all: $(UEFIIMAGE)
 
 run: $(UEFIIMAGE)
-	qemu-system-x86_64 -bios OVMF.fd -net none -hdb $<
+	qemu-system-x86_64 -bios OVMF.fd -net none -drive file=$<,format=raw
 
 run-debug: $(UEFIIMAGE)
-	qemu-system-x86_64 -s -bios OVMF.fd -net none -hdb $<
+	qemu-system-x86_64 -s -bios OVMF.fd -net none -drive file=$<,format=raw
 
 $(UEFIIMAGE): $(UEFIBINARY) $(BINARY)
 	dd if=/dev/zero of=$@ bs=1k count=$(UEFIIMGSIZE)
