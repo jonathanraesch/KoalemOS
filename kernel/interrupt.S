@@ -11,7 +11,7 @@ global load_idt
 load_idt:
 	enter 10, 0
 	mov [rbp-8], rdi
-	mov [rbp-10], rsi
+	mov [rbp-10], si
 	lidt [rbp-10]
 	leave
 	ret
