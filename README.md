@@ -23,3 +23,4 @@ KoalemOS is a hobby project to explore OS development.
 * add tests
 * extend debugging support
 * improve memory manager
+* make separate debug build
