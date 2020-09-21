@@ -3,7 +3,8 @@ section .data
 kernel_gdt:
 ;	dq 0
 ;	dq 0x209A0000000000
-resb 16
+;	dq 0x920000000000
+resb 24
 kernel_gdtr:
 resb 10
 ;	dw 16
@@ -45,12 +46,14 @@ _kernel_start:
 	mov [rbx], rax
 	mov rax, 0x209A0000000000
 	mov [rbx+8], rax
+	mov rax, 0x920000000000
+	mov [rbx+16], rax
 
 	; set up gdtr
 	mov rax, rbx
 	lea rbx, [rel kernel_gdtr]
 	mov [rbx+2], rax
-	mov ax, 16
+	mov ax, 23
 	mov [rbx], ax
 
 	; load gdt
@@ -59,6 +62,12 @@ _kernel_start:
 	; load CS
 	jmp qword far [rax]
 kernel_gdt_loaded:
+	mov ax, 16
+	mov ss, ax
+	mov ds, ax
+	mov es, ax
+	mov fs, ax
+	mov gs, ax
 
 	call setup_idt
 	sti
