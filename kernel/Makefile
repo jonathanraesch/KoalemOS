@@ -27,11 +27,6 @@ export KERNELBINDIR
 
 -include $(DEPS)
 
-.PHONY: all
-.DEFAULT_GOAL := all
-
-
-all: $(BINARY)
 
 $(BINARY): $(OBJS) $(LDSCRIPT)
 	$(LD) -n -T $(LDSCRIPT) -o $(ELFFILE) $(OBJS)
