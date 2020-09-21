@@ -2,6 +2,11 @@ section .text
 
 extern kernel_panic
 
+global get_cs
+get_cs:
+	mov rax, cs
+	ret
+
 global load_idt
 load_idt:
 	enter 10, 0
