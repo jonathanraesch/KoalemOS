@@ -23,4 +23,4 @@ isr_not_implemented:
 
 global isr_do_nothing
 isr_do_nothing:
-	iret
+	iretq
