@@ -6,7 +6,7 @@ LD := $(CROSSDIR)/bin/x86_64-elf-ld
 ENVSUBST := envsubst
 
 KERNELASFLAGS := -w+all -f elf64
-KERNELCFLAGS := -std=c11 -pedantic-errors -Wall -mcmodel=large -ffreestanding -O0 -nostdlib -mno-red-zone -masm=intel -fno-asynchronous-unwind-tables
+KERNELCFLAGS := -std=c11 -pedantic-errors -Wall -mcmodel=large -ffreestanding -Og -ggdb -nostdlib -mno-red-zone -masm=intel -fno-asynchronous-unwind-tables
 
 BINDIR := $(BUILDDIR)/bin
 KERNELBINDIR := $(BINDIR)/kernel
@@ -19,6 +19,7 @@ SRCS := $(foreach srctype, $(SRCTYPES), $(shell find $(KERNELSRCDIR) -name *$(sr
 OBJS := $(SRCS:$(srcdir)/%=$(BINDIR)/%.o)
 DEPS := $(OBJS:%.o=%.d)
 
+ELFFILE := $(BINDIR)/koalemos.elf
 BINARY := $(BINDIR)/koalemos.bin
 LDSCRIPT := $(OUTCONFDIR)/linker.ld
 
@@ -33,7 +34,8 @@ export KERNELBINDIR
 all: $(BINARY)
 
 $(BINARY): $(OBJS) $(LDSCRIPT)
-	$(LD) -n -T $(LDSCRIPT) -o $@ $(OBJS)
+	$(LD) -n -T $(LDSCRIPT) -o $(ELFFILE) $(OBJS)
+	objcopy -O binary $(ELFFILE) $@
 
 $(OUTCONFDIR)/%: $(INCONFDIR)/% 
 	mkdir -p $(OUTCONFDIR)
