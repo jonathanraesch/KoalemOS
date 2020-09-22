@@ -19,6 +19,7 @@ stack_top:
 
 
 extern setup_idt
+extern init_graphics
 extern init_memory_management
 extern kernel_post_init_check
 
@@ -30,8 +31,9 @@ _kernel_start:
 
 	; load initial stack:
 	mov rsp, stack_top
-
-	push rdx ; efi_mmap_data
+	mov rbp, rsp
+	push rdx ; efi_mmap_data	[rbp-8]
+	push rcx ; fb_info			[rbp-16]
 
 	; set up far jump target
 	lea rbx, [rel kernel_gdt_jmp_target]
@@ -72,7 +74,10 @@ kernel_gdt_loaded:
 	call setup_idt
 	sti
 
-	pop rdi
+	mov rdi, [rbp-16]
+	call init_graphics
+
+	mov rdi, [rbp-8]
 	call init_memory_management
 	call kernel_post_init_check
 

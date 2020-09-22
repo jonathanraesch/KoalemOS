@@ -1,6 +1,7 @@
 #include <efi.h>
 #include <efilib.h>
 #include "paging.h"
+#include "graphics_common.h"
 #include "boot.h"
 
 
@@ -77,6 +78,57 @@ efi_main (EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table) {
 	}
 	paging_set_up_boot_mapping((void*)paging_buf, get_pml4(), kernel_addr);
 
+
+	EFI_GUID gop_pguid = EFI_GRAPHICS_OUTPUT_PROTOCOL_GUID;
+	EFI_GRAPHICS_OUTPUT_PROTOCOL *gop;
+	status = uefi_call_wrapper(bs->LocateProtocol, 3, &gop_pguid, NULL, &gop);
+	if (status != EFI_SUCCESS) {
+		return status;
+	}
+
+	uint64_t max_pixel_count = 0;
+	UINT32 best_mode_num;
+	for(UINT32 mode_num = 0; mode_num < gop->Mode->MaxMode; mode_num++) {
+		EFI_GRAPHICS_OUTPUT_MODE_INFORMATION* mode_info;
+		UINTN mode_info_size;
+		status = uefi_call_wrapper(gop->QueryMode, 4, gop, mode_num, &mode_info_size, &mode_info);
+		if (status != EFI_SUCCESS) {
+			continue;
+		}
+		if(mode_info->PixelFormat == PixelBlueGreenRedReserved8BitPerColor) {
+#ifdef MAX_HRES
+			if(mode_info->HorizontalResolution > MAX_HRES) {
+				continue;
+			}
+#endif
+#ifdef MAX_VRES
+			if(mode_info->VerticalResolution > MAX_VRES) {
+				continue;
+			}
+#endif
+			uint64_t pixel_count = (uint64_t)mode_info->HorizontalResolution * (uint64_t)mode_info->VerticalResolution;
+			if(pixel_count > best_mode_num) {
+				max_pixel_count = pixel_count;
+				best_mode_num = mode_num;
+			}
+		}
+	}
+	if(max_pixel_count == 0) {
+		return EFI_UNSUPPORTED;
+	}
+
+	status = uefi_call_wrapper(gop->SetMode, 2, gop, best_mode_num);
+	if (status != EFI_SUCCESS) {
+		return status;
+	}
+
+	gop_framebuffer_info fb_info;
+	fb_info.hres = gop->Mode->Info->HorizontalResolution;
+	fb_info.vres = gop->Mode->Info->VerticalResolution;
+	fb_info.width = gop->Mode->Info->PixelsPerScanLine;
+	fb_info.addr = (void*)gop->Mode->FrameBufferBase;
+
+
 	UINTN mmap[1000];
 	UINTN mmap_buf_size = sizeof(UINTN)*1000;
 	UINTN mmap_key;
@@ -94,5 +146,5 @@ efi_main (EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table) {
 
 
 	efi_mmap_data mmap_data = {.descriptors = mmap, .mmap_size=mmap_buf_size, .descriptor_size=descr_size};
-	boot_end((void*)paging_buf, (void*)KERNEL_LINADDR, &mmap_data);
+	boot_end((void*)paging_buf, (void*)KERNEL_LINADDR, &mmap_data, &fb_info);
 }
