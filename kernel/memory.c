@@ -89,10 +89,12 @@ int free_phys_pages(void* base_addr, uint64_t count) {
 
 // TODO: make address calculation for zeroing structures more readable and/or performant
 void map_page(void* vaddr, void* paddr, uint64_t flags) {
-	if (!(*PML4E_ADDR_OF(vaddr) & PAGING_FLAG_PRESENT)) {
+	if (*PML4E_ADDR_OF(vaddr) & PAGING_FLAG_PRESENT) {
+		*PML4E_ADDR_OF(vaddr) |= flags;
+	} else {
 		uint64_t* pdpt_addr = alloc_phys_pages(1);
 		if(pdpt_addr) {
-			*PML4E_ADDR_OF(vaddr) = (uintptr_t)pdpt_addr | PAGING_FLAG_PRESENT | flags;
+			*PML4E_ADDR_OF(vaddr) = (uintptr_t)pdpt_addr | PAGING_FLAG_PRESENT | PAGING_FLAG_READ_WRITE;
 			invalidate_tlbs_for(vaddr);
 			invalidate_tlbs_for(PTE_ADDR_OF(vaddr));
 			invalidate_tlbs_for(PDE_ADDR_OF(vaddr));
@@ -101,14 +103,19 @@ void map_page(void* vaddr, void* paddr, uint64_t flags) {
 				uint64_t* base_pdpte_addr = (uint64_t*)(((uintptr_t)vaddr&0xFFFFFF8000000000) + 0x40000000*i);
 				*PDPTE_ADDR_OF(base_pdpte_addr) = 0;
 			}
+			*PML4E_ADDR_OF(vaddr) = (uintptr_t)pdpt_addr | PAGING_FLAG_PRESENT | flags;
 		} else {
 			kernel_panic();
 		}
 	}
-	if (!(*PDPTE_ADDR_OF(vaddr) & PAGING_FLAG_PRESENT)) {
+	if (*PDPTE_ADDR_OF(vaddr) & PAGING_FLAG_PRESENT) {
+		*PDPTE_ADDR_OF(vaddr) |= flags;
+	} else {
 		uint64_t* pde_addr = alloc_phys_pages(1);
 		if(pde_addr) {
-			*PDPTE_ADDR_OF(vaddr) = (uintptr_t)pde_addr | PAGING_FLAG_PRESENT | flags;
+			*PDPTE_ADDR_OF(vaddr) = (uintptr_t)pde_addr | PAGING_FLAG_PRESENT | PAGING_FLAG_READ_WRITE;
+			uint64_t pml4e_val = *PML4E_ADDR_OF(vaddr);
+			*PML4E_ADDR_OF(vaddr) |= PAGING_FLAG_READ_WRITE;
 			invalidate_tlbs_for(vaddr);
 			invalidate_tlbs_for(PTE_ADDR_OF(vaddr));
 			invalidate_tlbs_for(PDE_ADDR_OF(vaddr));
@@ -116,20 +123,31 @@ void map_page(void* vaddr, void* paddr, uint64_t flags) {
 				uint64_t* base_pde_addr = (uint64_t*)(((uintptr_t)vaddr&0xFFFFFFFFC0000000) + 0x200000*i);
 				*PDE_ADDR_OF(base_pde_addr) = 0;
 			}
+			*PML4E_ADDR_OF(vaddr) = pml4e_val;
+			*PDPTE_ADDR_OF(vaddr) = (uintptr_t)pde_addr | PAGING_FLAG_PRESENT | flags;
 		} else {
 			kernel_panic();
 		}
 	}
-	if (!(*PDE_ADDR_OF(vaddr) & PAGING_FLAG_PRESENT)) {
+	if (*PDE_ADDR_OF(vaddr) & PAGING_FLAG_PRESENT) {
+		*PDE_ADDR_OF(vaddr) |= flags;
+	} else {
 		uint64_t* pte_addr = alloc_phys_pages(1);
 		if(pte_addr) {
-			*PDE_ADDR_OF(vaddr) = (uintptr_t)pte_addr | PAGING_FLAG_PRESENT | flags;
+			*PDE_ADDR_OF(vaddr) = (uintptr_t)pte_addr | PAGING_FLAG_PRESENT | PAGING_FLAG_READ_WRITE | flags;
+			uint64_t pdpte_val = *PDPTE_ADDR_OF(vaddr);
+			*PDPTE_ADDR_OF(vaddr) |= PAGING_FLAG_READ_WRITE;
+			uint64_t pml4e_val = *PML4E_ADDR_OF(vaddr);
+			*PML4E_ADDR_OF(vaddr) |= PAGING_FLAG_READ_WRITE;
 			invalidate_tlbs_for(vaddr);
 			invalidate_tlbs_for(PTE_ADDR_OF(vaddr));
 			for(uint64_t i = 0; i < 512; i++) {
 				uint64_t* base_pte_addr = (uint64_t*)(((uintptr_t)vaddr&0xFFFFFFFFFFE00000) + 0x1000*i);
 				*PTE_ADDR_OF(base_pte_addr) = 0;
 			}
+			*PML4E_ADDR_OF(vaddr) = pml4e_val;
+			*PDPTE_ADDR_OF(vaddr) = pdpte_val;
+			*PDE_ADDR_OF(vaddr) = (uintptr_t)pte_addr | PAGING_FLAG_PRESENT | flags;
 		} else {
 			kernel_panic();
 		}
