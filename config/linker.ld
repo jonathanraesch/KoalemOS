@@ -21,10 +21,10 @@ SECTIONS {
            ${KERNELBINDIR}/*(.bss)
          }
          .phys_mmap BLOCK(4K) : {
-           */(PHYS_MMAP)
-           . = 0x8000000; /* reserve memory to handle up to 64GiB physical memory in 1-page regions */
+           *(PHYS_MMAP)
+           . = 0x80000;
          }
          .kernel_heap BLOCK(4K) : {
-           */(KERNEL_HEAP)
+           *(KERNEL_HEAP)
          }
 }
