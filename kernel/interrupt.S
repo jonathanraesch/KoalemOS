@@ -9,6 +9,7 @@ get_cs:
 
 global load_idt
 load_idt:
+	nop
 	enter 10, 0
 	mov [rbp-8], rdi
 	mov [rbp-10], si
@@ -23,4 +24,5 @@ isr_not_implemented:
 
 global isr_do_nothing
 isr_do_nothing:
+	nop
 	iretq
