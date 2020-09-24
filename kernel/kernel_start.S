@@ -19,9 +19,9 @@ stack_top:
 
 
 extern setup_idt
-extern init_graphics
 extern init_memory_management
 extern kernel_post_init_check
+extern kmain
 
 global _kernel_start
 
@@ -74,12 +74,13 @@ kernel_gdt_loaded:
 	call setup_idt
 	sti
 
-	mov rdi, [rbp-16]
-	call init_graphics
-
 	mov rdi, [rbp-8]
 	call init_memory_management
+
 	call kernel_post_init_check
+
+	mov rdi, [rbp-16]
+	call kmain
 
 kloop:
 	jmp kloop
