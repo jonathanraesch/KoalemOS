@@ -5,6 +5,21 @@
 #include "boot.h"
 
 
+typedef struct __attribute__((__packed__)) {
+	uint64_t signature;
+	uint8_t checksum;
+	uint32_t oemid_lo;
+	uint16_t oemid_hi;
+	uint8_t revision;
+	uint32_t rsdt_addr;
+	uint32_t length;
+	uint64_t xsdt_addr;
+	uint8_t ext_checksum;
+	uint16_t _reserved_lo;
+	uint8_t _reserved_hi;
+} acpi_rsdp;
+
+
 EFI_STATUS
 efi_main (EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table) {
 	InitializeLib(image_handle, system_table);
@@ -129,6 +144,39 @@ efi_main (EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table) {
 	fb_info.addr = (void*)gop->Mode->FrameBufferBase;
 
 
+	EFI_GUID acpi20_table_guid_ = ACPI_20_TABLE_GUID;
+	EFI_GUID acpi10_table_guid_ = ACPI_TABLE_GUID;
+	uint64_t* acpi20_table_guid = (uint64_t*)&acpi20_table_guid_;
+	uint64_t* acpi10_table_guid = (uint64_t*)&acpi10_table_guid_;
+	acpi_rsdp* rsdp_10 = 0;
+	acpi_rsdp* rsdp_20 = 0;
+	for(UINTN i = 0; i < system_table->NumberOfTableEntries; i++) {
+		uint64_t* vendor_guid = (uint64_t*)&system_table->ConfigurationTable[i].VendorGuid;
+		if(acpi20_table_guid[0] == vendor_guid[0] && acpi20_table_guid[1] == vendor_guid[1]) {
+			rsdp_20 = (acpi_rsdp*)system_table->ConfigurationTable[i].VendorTable;
+			break;
+		}
+		if(acpi10_table_guid[0] == vendor_guid[0] && acpi10_table_guid[1] == vendor_guid[1]) {
+			rsdp_10 = (acpi_rsdp*)system_table->ConfigurationTable[i].VendorTable;
+		}
+	}
+	void* acpi_x_r_sdt;
+	if(rsdp_20) {
+		if(rsdp_20->revision >= 2) {
+			acpi_x_r_sdt = (void*)(uintptr_t)rsdp_20->xsdt_addr;
+		}
+	}
+	if(!acpi_x_r_sdt && rsdp_20) {
+		acpi_x_r_sdt = (void*)(uintptr_t)rsdp_20->rsdt_addr;
+	}
+	if(!acpi_x_r_sdt && rsdp_10) {
+		acpi_x_r_sdt = (void*)(uintptr_t)rsdp_10->rsdt_addr;
+	}
+	if(!acpi_x_r_sdt) {
+		return EFI_UNSUPPORTED;
+	}
+
+
 	UINTN mmap[1000];
 	UINTN mmap_buf_size = sizeof(UINTN)*1000;
 	UINTN mmap_key;
@@ -146,5 +194,5 @@ efi_main (EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table) {
 
 
 	efi_mmap_data mmap_data = {.descriptors = mmap, .mmap_size=mmap_buf_size, .descriptor_size=descr_size};
-	boot_end((void*)paging_buf, (void*)KERNEL_LINADDR, &mmap_data, &fb_info);
+	boot_end((void*)paging_buf, (void*)KERNEL_LINADDR, &mmap_data, &fb_info, acpi_x_r_sdt);
 }

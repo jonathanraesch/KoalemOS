@@ -32,8 +32,9 @@ _kernel_start:
 	; load initial stack:
 	mov rsp, stack_top
 	mov rbp, rsp
-	push rdx ; efi_mmap_data	[rbp-8]
-	push rcx ; fb_info			[rbp-16]
+	push rdx	;	efi_mmap_data	[rbp-8]
+	push rcx	;	fb_info			[rbp-16]
+	push r8		;	acpi_x_r_sdt	[rbp-24]
 
 	; set up far jump target
 	lea rbx, [rel kernel_gdt_jmp_target]
@@ -80,6 +81,7 @@ kernel_gdt_loaded:
 	call kernel_post_init_check
 
 	mov rdi, [rbp-16]
+	mov rsi, [rbp-24]
 	call kmain
 
 kloop:

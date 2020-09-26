@@ -30,3 +30,11 @@ KoalemOS is a hobby project to explore OS development.
 * improve memory manager
 * make separate debug build
 * add debugging for assembly code
+* check ACPI table checksums
+* revisit ACPI table paging
+  * is mapping the first page of ACPI tables is always sufficient to read header information?
+  * possibly unmap tables, when not needed
+* create proper memory map, including:
+  * system structures (MMIO, ACPI tables, ...)
+  * userspace memory
+  * kernel memory
