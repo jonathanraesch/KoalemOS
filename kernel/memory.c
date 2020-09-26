@@ -113,9 +113,9 @@ void map_page(void* vaddr, void* paddr, uint64_t flags) {
 	} else {
 		uint64_t* pde_addr = alloc_phys_pages(1);
 		if(pde_addr) {
-			*PDPTE_ADDR_OF(vaddr) = (uintptr_t)pde_addr | PAGING_FLAG_PRESENT | PAGING_FLAG_READ_WRITE;
 			uint64_t pml4e_val = *PML4E_ADDR_OF(vaddr);
 			*PML4E_ADDR_OF(vaddr) |= PAGING_FLAG_READ_WRITE;
+			*PDPTE_ADDR_OF(vaddr) = (uintptr_t)pde_addr | PAGING_FLAG_PRESENT | PAGING_FLAG_READ_WRITE;
 			invalidate_tlbs_for(vaddr);
 			invalidate_tlbs_for(PTE_ADDR_OF(vaddr));
 			invalidate_tlbs_for(PDE_ADDR_OF(vaddr));
@@ -123,8 +123,8 @@ void map_page(void* vaddr, void* paddr, uint64_t flags) {
 				uint64_t* base_pde_addr = (uint64_t*)(((uintptr_t)vaddr&0xFFFFFFFFC0000000) + 0x200000*i);
 				*PDE_ADDR_OF(base_pde_addr) = 0;
 			}
-			*PML4E_ADDR_OF(vaddr) = pml4e_val;
 			*PDPTE_ADDR_OF(vaddr) = (uintptr_t)pde_addr | PAGING_FLAG_PRESENT | flags;
+			*PML4E_ADDR_OF(vaddr) = pml4e_val;
 		} else {
 			kernel_panic();
 		}
@@ -134,20 +134,20 @@ void map_page(void* vaddr, void* paddr, uint64_t flags) {
 	} else {
 		uint64_t* pte_addr = alloc_phys_pages(1);
 		if(pte_addr) {
-			*PDE_ADDR_OF(vaddr) = (uintptr_t)pte_addr | PAGING_FLAG_PRESENT | PAGING_FLAG_READ_WRITE | flags;
-			uint64_t pdpte_val = *PDPTE_ADDR_OF(vaddr);
-			*PDPTE_ADDR_OF(vaddr) |= PAGING_FLAG_READ_WRITE;
 			uint64_t pml4e_val = *PML4E_ADDR_OF(vaddr);
 			*PML4E_ADDR_OF(vaddr) |= PAGING_FLAG_READ_WRITE;
+			uint64_t pdpte_val = *PDPTE_ADDR_OF(vaddr);
+			*PDPTE_ADDR_OF(vaddr) |= PAGING_FLAG_READ_WRITE;
+			*PDE_ADDR_OF(vaddr) = (uintptr_t)pte_addr | PAGING_FLAG_PRESENT | PAGING_FLAG_READ_WRITE | flags;
 			invalidate_tlbs_for(vaddr);
 			invalidate_tlbs_for(PTE_ADDR_OF(vaddr));
 			for(uint64_t i = 0; i < 512; i++) {
 				uint64_t* base_pte_addr = (uint64_t*)(((uintptr_t)vaddr&0xFFFFFFFFFFE00000) + 0x1000*i);
 				*PTE_ADDR_OF(base_pte_addr) = 0;
 			}
-			*PML4E_ADDR_OF(vaddr) = pml4e_val;
-			*PDPTE_ADDR_OF(vaddr) = pdpte_val;
 			*PDE_ADDR_OF(vaddr) = (uintptr_t)pte_addr | PAGING_FLAG_PRESENT | flags;
+			*PDPTE_ADDR_OF(vaddr) = pdpte_val;
+			*PML4E_ADDR_OF(vaddr) = pml4e_val;
 		} else {
 			kernel_panic();
 		}
