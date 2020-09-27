@@ -2,6 +2,11 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+
+#define ACPI_SIGNATURE_RSDT 0x54445352
+#define ACPI_SIGNATURE_XSDT 0x54445358
+
+
 typedef struct {
 	void* addr;
 	uint32_t length;

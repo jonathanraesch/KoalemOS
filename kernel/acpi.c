@@ -15,18 +15,15 @@ uint32_t* rsdt_entries;
 uint64_t* xsdt_entries;
 uint32_t sdt_entry_count;
 
-uint8_t rsdt_signature[4] = {'R', 'S', 'D', 'T'};
-uint8_t xsdt_signature[4] = {'X', 'S', 'D', 'T'};
-
 
 void init_acpi(void* acpi_x_r_sdt) {
 	map_page(PAGE_BASE(acpi_x_r_sdt), PAGE_BASE(acpi_x_r_sdt), 0);
 	uint32_t sdt_len = ((uint32_t*)acpi_x_r_sdt)[1];
-	if(*(uint32_t*)acpi_x_r_sdt == *(uint32_t*)xsdt_signature) {
+	if(*(uint32_t*)acpi_x_r_sdt == ACPI_SIGNATURE_XSDT) {
 		sdt_type = XSDT;
 		xsdt_entries = (uint64_t*)((uintptr_t)acpi_x_r_sdt + SDT_HEADER_SIZE);
 		sdt_entry_count = (sdt_len - SDT_HEADER_SIZE)/8;
-	} else if(*(uint32_t*)acpi_x_r_sdt == *(uint32_t*)rsdt_signature) {
+	} else if(*(uint32_t*)acpi_x_r_sdt == ACPI_SIGNATURE_RSDT) {
 		sdt_type = RSDT;
 		rsdt_entries = (uint32_t*)((uintptr_t)acpi_x_r_sdt + SDT_HEADER_SIZE);
 		sdt_entry_count = (sdt_len - SDT_HEADER_SIZE)/4;
