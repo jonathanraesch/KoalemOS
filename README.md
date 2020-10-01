@@ -38,3 +38,6 @@ KoalemOS is a hobby project to explore OS development.
   * system structures (MMIO, ACPI tables, ...)
   * userspace memory
   * kernel memory
+* specify dependencies between parts of kernel (e.g. init_acpi needing to be called before init_pci)
+  * could likely be solved by implementing kernel modules
+* implement PCI 3.0 compatible PCIe configuration mechanism

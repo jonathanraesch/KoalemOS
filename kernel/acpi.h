@@ -3,8 +3,12 @@
 #include <stdbool.h>
 
 
+// ACPI defined
 #define ACPI_SIGNATURE_RSDT 0x54445352
 #define ACPI_SIGNATURE_XSDT 0x54445358
+
+// ACPI reserved
+#define ACPI_SIGNATURE_MCFG 0x4746434D
 
 
 typedef struct {
