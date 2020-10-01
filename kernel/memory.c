@@ -152,14 +152,32 @@ void map_page(void* vaddr, void* paddr, uint64_t flags) {
 			kernel_panic();
 		}
 	}
+	uint64_t pml4e_val = *PML4E_ADDR_OF(vaddr);
+	*PML4E_ADDR_OF(vaddr) |= PAGING_FLAG_READ_WRITE;
+	uint64_t pdpte_val = *PDPTE_ADDR_OF(vaddr);
+	*PDPTE_ADDR_OF(vaddr) |= PAGING_FLAG_READ_WRITE;
+	uint64_t pde_val = *PDE_ADDR_OF(vaddr);
+	*PDE_ADDR_OF(vaddr) |= PAGING_FLAG_READ_WRITE;
 	*PTE_ADDR_OF(vaddr) = (uintptr_t)paddr | PAGING_FLAG_PRESENT | flags;
+	*PDE_ADDR_OF(vaddr) = pde_val;
+	*PDPTE_ADDR_OF(vaddr) = pdpte_val;
+	*PML4E_ADDR_OF(vaddr) = pml4e_val;
 
 	invalidate_tlbs_for(vaddr);
 }
 
 // TODO: fix memory leak
 void unmap_page(void* vaddr) {
+	uint64_t pml4e_val = *PML4E_ADDR_OF(vaddr);
+	*PML4E_ADDR_OF(vaddr) |= PAGING_FLAG_READ_WRITE;
+	uint64_t pdpte_val = *PDPTE_ADDR_OF(vaddr);
+	*PDPTE_ADDR_OF(vaddr) |= PAGING_FLAG_READ_WRITE;
+	uint64_t pde_val = *PDE_ADDR_OF(vaddr);
+	*PDE_ADDR_OF(vaddr) |= PAGING_FLAG_READ_WRITE;
 	*PTE_ADDR_OF(vaddr) = 0;
+	*PDE_ADDR_OF(vaddr) = pde_val;
+	*PDPTE_ADDR_OF(vaddr) = pdpte_val;
+	*PML4E_ADDR_OF(vaddr) = pml4e_val;
 
 	invalidate_tlbs_for(vaddr);
 }
