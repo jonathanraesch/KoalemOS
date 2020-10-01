@@ -17,7 +17,6 @@ uint32_t sdt_entry_count;
 
 
 void init_acpi(void* acpi_x_r_sdt) {
-	map_page(PAGE_BASE(acpi_x_r_sdt), PAGE_BASE(acpi_x_r_sdt), 0);
 	uint32_t sdt_len = ((uint32_t*)acpi_x_r_sdt)[1];
 	if(*(uint32_t*)acpi_x_r_sdt == ACPI_SIGNATURE_XSDT) {
 		sdt_type = XSDT;
@@ -29,23 +28,6 @@ void init_acpi(void* acpi_x_r_sdt) {
 		sdt_entry_count = (sdt_len - SDT_HEADER_SIZE)/4;
 	} else {
 		kernel_panic();
-	}
-
-	uint8_t* last = PAGE_BASE((uintptr_t)acpi_x_r_sdt + sdt_len);
-	for(uint8_t* base = (uint8_t*)PAGE_BASE(acpi_x_r_sdt) + 0x1000; base <= last; base += 0x1000) {
-		map_page(base, base, 0);
-	}
-	switch(sdt_type) {
-	case RSDT:
-		for(uint32_t i = 0; i < sdt_entry_count; i++) {
-			map_page(PAGE_BASE(rsdt_entries[i]), PAGE_BASE(rsdt_entries[i]), 0);
-		}
-		break;
-	case XSDT:
-		for(uint32_t i = 0; i < sdt_entry_count; i++) {
-			map_page(PAGE_BASE(xsdt_entries[i]), PAGE_BASE(xsdt_entries[i]), 0);
-		}
-		break;
 	}
 }
 

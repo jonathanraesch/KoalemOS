@@ -184,13 +184,18 @@ void unmap_page(void* vaddr) {
 
 
 void init_mmap(efi_mmap_data* mmap_data) {
-	void *cur_desc_ptr =  mmap_data->descriptors;
-	const void *efi_mmap_end = (void*)((uintptr_t)mmap_data->descriptors + mmap_data->mmap_size);
+	void* const efi_mmap_start = mmap_data->descriptors;
+	void* const efi_mmap_end = (void*)((uintptr_t)mmap_data->descriptors + mmap_data->mmap_size);
+	const size_t efi_mmap_desc_size = mmap_data->descriptor_size;
 
+	void *cur_desc_ptr = efi_mmap_start;
 	while(cur_desc_ptr < efi_mmap_end) {
 
 		EFI_MEMORY_DESCRIPTOR cur_desc = *((EFI_MEMORY_DESCRIPTOR*)cur_desc_ptr);
 		switch(cur_desc.Type) {
+			case EFI_MEM_TYPE_KERNEL:
+			case EfiACPIReclaimMemory:
+				break;
 			case EfiLoaderCode:
 			case EfiLoaderData:
 			case EfiBootServicesCode:
@@ -207,27 +212,21 @@ void init_mmap(efi_mmap_data* mmap_data) {
 				if(!mmap_add_range(&phys_mmap, (void*)cur_desc.PhysicalStart, cur_desc.NumberOfPages)) {
 					kernel_panic();
 				}
-				break;
 			default:
+				for(uint64_t i = 0; i < cur_desc.NumberOfPages; i++) {
+					void* addr = (void*)(cur_desc.PhysicalStart + i*0x1000);
+					if(addr < PAGE_BASE(efi_mmap_start) || addr > PAGE_BASE(efi_mmap_end)) {
+						unmap_page(addr);
+					}
+				}
 				break;
 		}
 
-		cur_desc_ptr = (void*)((uintptr_t)cur_desc_ptr + mmap_data->descriptor_size);
+		cur_desc_ptr = (void*)((uintptr_t)cur_desc_ptr + efi_mmap_desc_size);
 	}
 
-	for(uintptr_t addr = 0; addr<256*0x8000000000; addr+=0x8000000000) {
-		if (addr == (KERNEL_LINADDR&0xFFFFFF8000000000)) {
-			continue;
-		}
-		*PML4E_ADDR_OF(addr) = 0;
-		invalidate_tlbs_for((void*)addr);
-	}
-	for(uintptr_t addr = 0xFFFF800000000000; addr<0xFFFFFF8000000000; addr+=0x8000000000) {
-		if (addr == (KERNEL_LINADDR&0xFFFFFF8000000000)) {
-			continue;
-		}
-		*PML4E_ADDR_OF(addr) = 0;
-		invalidate_tlbs_for((void*)addr);
+	for(uintptr_t page_base = (uintptr_t)PAGE_BASE(efi_mmap_start); page_base<=(uintptr_t)efi_mmap_end; page_base+=0x1000) {
+		unmap_page((void*)page_base);
 	}
 }
 
