@@ -14,6 +14,8 @@ INCONFDIR := $(srcdir)/config
 OUTCONFDIR := $(BUILDDIR)/config
 ISODIR := $(BUILDDIR)/iso
 
+LIBGCCDIR := $(dir $(shell $(CC) $(CFLAGS) -print-libgcc-file-name))
+
 SRCTYPES := .s .S .c .i .ii .cc .cxx .cpp .C
 SRCS := $(foreach srctype, $(SRCTYPES), $(shell find $(KERNELSRCDIR) -name *$(srctype)))
 OBJS := $(SRCS:$(srcdir)/%=$(BINDIR)/%.o)
@@ -29,7 +31,7 @@ export KERNELBINDIR
 
 
 $(BINARY): $(OBJS) $(LDSCRIPT)
-	$(LD) -n -T $(LDSCRIPT) -o $(ELFFILE) $(OBJS)
+	$(LD) -n -T $(LDSCRIPT) -L $(LIBGCCDIR) -lgcc -o $(ELFFILE) $(OBJS)
 	objcopy -O binary $(ELFFILE) $@
 
 $(OUTCONFDIR)/%: $(INCONFDIR)/% 
