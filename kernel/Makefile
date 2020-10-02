@@ -16,7 +16,7 @@ ISODIR := $(BUILDDIR)/iso
 
 LIBGCCDIR := $(dir $(shell $(CC) $(CFLAGS) -print-libgcc-file-name))
 
-SRCTYPES := .s .S .c .i .ii .cc .cxx .cpp .C
+SRCTYPES := .s .c
 SRCS := $(foreach srctype, $(SRCTYPES), $(shell find $(KERNELSRCDIR) -name *$(srctype)))
 OBJS := $(SRCS:$(srcdir)/%=$(BINDIR)/%.o)
 DEPS := $(OBJS:%.o=%.d)
@@ -34,18 +34,14 @@ $(BINARY): $(OBJS) $(LDSCRIPT)
 	$(LD) -n -T $(LDSCRIPT) -L $(LIBGCCDIR) -lgcc -o $(ELFFILE) $(OBJS)
 	objcopy -O binary $(ELFFILE) $@
 
-$(OUTCONFDIR)/%: $(INCONFDIR)/% 
+$(OUTCONFDIR)/%: $(INCONFDIR)/%
 	mkdir -p $(OUTCONFDIR)
 	$(ENVSUBST) < $^ > $@
 
 $(KERNELBINDIR)/%.s.o: $(KERNELSRCDIR)/%.s
 	mkdir -p $(dir $@)
-	$(AS) $(KERNELASFLAGS) -MD $(@:%.o=%.d) -o $@ $< 
+	$(AS) $(KERNELASFLAGS) -MD $(@:%.o=%.d) -o $@ $<
 
-$(KERNELBINDIR)/%.S.o: $(KERNELSRCDIR)/%.S
+$(KERNELBINDIR)/%.c.o: $(KERNELSRCDIR)/%.c
 	mkdir -p $(dir $@)
-	$(AS) $(KERNELASFLAGS) -MD $(@:%.o=%.d) -o $@ $< 
-
-$(KERNELBINDIR)/%.o: $(KERNELSRCDIR)/%
-	mkdir -p $(dir $@)
-	$(CC) $(KERNELCFLAGS) -MMD -MF $(@:%.o=%.d) -o $@ -c $< 
+	$(CC) $(KERNELCFLAGS) -MMD -MF $(@:%.o=%.d) -o $@ -c $<
