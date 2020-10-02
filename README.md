@@ -6,8 +6,17 @@ KoalemOS is a hobby project to explore OS development.
 
 * qemu-system-x86_64
 * ovmf
-* x86_64-cross-toolchain
+* x86_64-cross-toolchain (see below)
+* nasm
 * mtools
+
+## Cross Compiler
+To install the required gcc cross compiler run the `install_cross_compiler.sh` script.
+The configurable options are set by environment variables:
+* `$BUILD_PATH` is the (temporary) build directory (default: `build-cross`)
+* `$PREFIX` is the base directory where gcc and binutils are install (default: `/usr/local/x86_64-elf-toolchain`)
+* `$GCC_VER` is the version of gcc to use (default: `10.2.0`)
+* `$BINUTILS_VER` is the version of binutils to use (default: `2.35`)
 
 ## ToDo
 
