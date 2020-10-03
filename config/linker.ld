@@ -5,20 +5,20 @@ SECTIONS {
          . = 0xFFFFFF0000000000;
 
          .kernel_start_text BLOCK(4K) : {
-           ${KERNELBINDIR}/*(.kernel_start_text)
+           ${KERNELBUILDDIR}/*(.kernel_start_text)
          }
          .kernel_text BLOCK(4K) : {
-           ${KERNELBINDIR}/*(.text)
+           ${KERNELBUILDDIR}/*(.text)
          }
          .kernel_rodata BLOCK(4K) : {
-           ${KERNELBINDIR}/*(.rodata) 
+           ${KERNELBUILDDIR}/*(.rodata)
          }
          .kernel_data BLOCK(4K) : {
-           ${KERNELBINDIR}/*(.data)
+           ${KERNELBUILDDIR}/*(.data)
          }
          .kernel_bss BLOCK(4K) : {
-           ${KERNELBINDIR}/*(COMMON)
-           ${KERNELBINDIR}/*(.bss)
+           ${KERNELBUILDDIR}/*(COMMON)
+           ${KERNELBUILDDIR}/*(.bss)
          }
          .phys_mmap BLOCK(4K) : {
            *(PHYS_MMAP)

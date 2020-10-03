@@ -31,13 +31,13 @@ run: $(UEFIIMAGE)
 run-debug: $(UEFIIMAGE)
 	qemu-system-x86_64 -s -bios OVMF.fd -net none -drive file=$<,format=raw -M q35
 
-$(UEFIIMAGE): $(UEFIBINARY) $(BINARY)
+$(UEFIIMAGE): $(UEFIBINARY) $(KERNELBINARY)
 	dd if=/dev/zero of=$@ bs=1k count=$(UEFIIMGSIZE)
 	mformat -i $@ -f $(UEFIIMGSIZE) ::
 	mmd -i $@ ::/EFI
 	mmd -i $@ ::/EFI/BOOT
 	mcopy -i $@ $(UEFIBINARY) ::/EFI/BOOT
-	mcopy -i $@ $(BINARY) ::/EFI/BOOT
+	mcopy -i $@ $(KERNELBINARY) ::/EFI/BOOT
 
 clean:
 	-rm -rf $(BUILDDIR)

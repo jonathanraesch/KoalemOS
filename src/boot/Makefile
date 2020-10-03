@@ -11,7 +11,7 @@ UEFICFLAGS += $(if $(MAX_VRES),-DMAX_VRES=$(MAX_VRES),)
 UEFILDFLAGS := -nostdlib -znocombreloc -T /usr/lib/elf_x86_64_efi.lds -shared -Bsymbolic -L /usr/lib -l:libgnuefi.a -l:libefi.a
 UEFIOBJCOPYFLAGS := -j .text -j .sdata -j .data -j .dynamic -j .dynsym -j .rel -j .rela -j .reloc --target=efi-app-x86_64
 
-UEFIBUILDDIR := $(BUILDDIR)/uefi
+UEFIBUILDDIR := $(BUILDDIR)/boot
 UEFIBINARY := $(UEFIBUILDDIR)/BOOTX64.efi
 
 UEFISRCS := $(foreach srctype, $(SRCTYPES), $(shell find $(UEFISRCDIR) -name *$(srctype)))
