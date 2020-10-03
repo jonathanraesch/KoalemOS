@@ -2,21 +2,26 @@ SHELL := /bin/sh
 
 SRCDIR := src
 INCLUDEDIR := include
+LIBCINCLUDEDIR := $(INCLUDEDIR)/libc
 CONFDIR := config
 BUILDDIR := build
 UEFISRCDIR := $(SRCDIR)/boot
 KERNELSRCDIR := $(SRCDIR)/kernel
+LIBCSRCDIR := $(SRCDIR)/libc
 
 CROSSMAKEFILE := cross.mk
 KERNELMAKEFILE := $(KERNELSRCDIR)/Makefile
 UEFIMAKEFILE := $(UEFISRCDIR)/Makefile
+LIBCMAKEFILE := $(LIBCSRCDIR)/Makefile
 
 UEFIIMAGE := $(BUILDDIR)/koalemos-uefi.img
 
 UEFIIMGSIZE := 2880
 
+SRCTYPES := .s .c
 
 -include $(CROSSMAKEFILE)
+-include $(LIBCMAKEFILE)
 -include $(KERNELMAKEFILE)
 -include $(UEFIMAKEFILE)
 
@@ -26,7 +31,7 @@ UEFIIMGSIZE := 2880
 .DEFAULT_GOAL := all
 
 
-all: $(UEFIIMAGE)
+all: $(UEFIIMAGE) $(LIBC) $(KLIBC)
 
 run: $(UEFIIMAGE)
 	qemu-system-x86_64 -bios OVMF.fd -net none -drive file=$<,format=raw -M q35

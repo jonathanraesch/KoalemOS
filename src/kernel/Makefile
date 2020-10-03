@@ -1,14 +1,13 @@
 ENVSUBST := envsubst
 
 KERNELASFLAGS := $(ASFLAGS) -w+all
-KERNELCFLAGS := $(CFLAGS) -std=c11 -pedantic-errors -Wall -I $(INCLUDEDIR) -mcmodel=large -Og -ggdb
+KERNELCFLAGS := $(CFLAGS) -std=c11 -pedantic-errors -Wall -I $(INCLUDEDIR) -I $(LIBCINCLUDEDIR) -mcmodel=large -Og -ggdb
 KERNELLDFLAGS := $(LDFLAGS)
 
 KERNELBUILDDIR := $(BUILDDIR)/kernel
 OUTCONFDIR := $(BUILDDIR)/config
 ISODIR := $(BUILDDIR)/iso
 
-SRCTYPES := .s .c
 KERNELSRCS := $(foreach srctype, $(SRCTYPES), $(shell find $(KERNELSRCDIR) -name *$(srctype)))
 KERNELOBJS := $(KERNELSRCS:$(KERNELSRCDIR)/%=$(KERNELBUILDDIR)/%.o)
 KERNELDEPS := $(KERNELOBJS:%.o=%.d)
@@ -22,8 +21,8 @@ export KERNELBUILDDIR
 -include $(KERNELDEPS)
 
 
-$(KERNELBINARY): $(KERNELOBJS) $(LDSCRIPT)
-	$(LD) -n -T $(LDSCRIPT) $(KERNELLDFLAGS) -o $(KERNELELFFILE) $(KERNELOBJS)
+$(KERNELBINARY): $(KERNELOBJS) $(LDSCRIPT) $(KLIBC)
+	$(LD) -n -T $(LDSCRIPT) $(KERNELLDFLAGS) -o $(KERNELELFFILE) $(KERNELOBJS) $(KLIBC)
 	objcopy -O binary $(KERNELELFFILE) $@
 
 $(OUTCONFDIR)/%: $(CONFDIR)/%
