@@ -7,6 +7,7 @@ BUILDDIR := build
 UEFISRCDIR := $(SRCDIR)/boot
 KERNELSRCDIR := $(SRCDIR)/kernel
 
+CROSSMAKEFILE := cross.mk
 KERNELMAKEFILE := $(KERNELSRCDIR)/Makefile
 UEFIMAKEFILE := $(UEFISRCDIR)/Makefile
 
@@ -14,6 +15,8 @@ UEFIIMAGE := $(BUILDDIR)/koalemos-uefi.img
 
 UEFIIMGSIZE := 2880
 
+
+-include $(CROSSMAKEFILE)
 -include $(KERNELMAKEFILE)
 -include $(UEFIMAKEFILE)
 
