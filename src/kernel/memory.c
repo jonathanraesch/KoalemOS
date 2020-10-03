@@ -1,8 +1,8 @@
-#include "memory.h"
-#include "kernel.h"
-#include "mmap.h"
-#include "../boot/paging_common.h"
-#include "../boot/mmap_common.h"
+#include "kernel/memory.h"
+#include "kernel/kernel.h"
+#include "kernel/mmap.h"
+#include "common/paging.h"
+#include "common/mmap.h"
 #include <stdbool.h>
 
 

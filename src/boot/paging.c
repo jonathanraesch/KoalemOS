@@ -1,4 +1,4 @@
-#include "paging.h"
+#include "boot/paging.h"
 
 
 /* kernel code can not exceed its 1GB aligned memory region

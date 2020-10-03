@@ -5,7 +5,7 @@ UEFICC := gcc
 UEFILD := ld
 OBJCOPY := objcopy
 
-UEFICFLAGS := -c -fno-stack-protector -fpic -fshort-wchar -mno-red-zone -I /usr/include/efi -I /usr/include/efi/x86_64 -DEFI_FUNCTION_WRAPPER
+UEFICFLAGS := -c -fno-stack-protector -fpic -fshort-wchar -mno-red-zone -I $(INCLUDEDIR) -I /usr/include/efi -I /usr/include/efi/x86_64 -DEFI_FUNCTION_WRAPPER
 UEFICFLAGS += $(if $(MAX_HRES),-DMAX_VRES=$(MAX_HRES),)
 UEFICFLAGS += $(if $(MAX_VRES),-DMAX_VRES=$(MAX_VRES),)
 UEFILDFLAGS := -nostdlib -znocombreloc -T /usr/lib/elf_x86_64_efi.lds -shared -Bsymbolic -L /usr/lib -l:libgnuefi.a -l:libefi.a

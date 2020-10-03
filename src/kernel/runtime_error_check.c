@@ -1,5 +1,5 @@
-#include "runtime_error_check.h"
-#include "memory.h"
+#include "kernel/runtime_error_check.h"
+#include "kernel/memory.h"
 
 
 void test_kernel_heap() {

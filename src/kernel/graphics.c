@@ -1,6 +1,6 @@
-#include "graphics.h"
-#include "memory.h"
-#include "../boot/paging_common.h"
+#include "kernel/graphics.h"
+#include "kernel/memory.h"
+#include "common/paging.h"
 
 typedef struct {
 	uint8_t blue;

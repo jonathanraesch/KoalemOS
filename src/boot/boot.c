@@ -1,8 +1,8 @@
 #include <efi.h>
 #include <efilib.h>
-#include "paging.h"
-#include "graphics_common.h"
-#include "boot.h"
+#include "boot/paging.h"
+#include "common/graphics.h"
+#include "boot/boot.h"
 
 
 typedef struct __attribute__((__packed__)) {

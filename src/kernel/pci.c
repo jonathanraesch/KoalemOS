@@ -1,8 +1,8 @@
-#include "pci.h"
-#include "acpi.h"
-#include "kernel.h"
-#include "memory.h"
-#include "../boot/paging_common.h"
+#include "kernel/pci.h"
+#include "kernel/acpi.h"
+#include "kernel/kernel.h"
+#include "kernel/memory.h"
+#include "common/paging.h"
 
 
 typedef struct {

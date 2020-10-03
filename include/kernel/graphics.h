@@ -1,5 +1,5 @@
 #pragma once
-#include "../boot/graphics_common.h"
+#include "common/graphics.h"
 #include <stdint.h>
 
 

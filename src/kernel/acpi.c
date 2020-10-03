@@ -1,6 +1,6 @@
-#include "acpi.h"
-#include "memory.h"
-#include "kernel.h"
+#include "kernel/acpi.h"
+#include "kernel/memory.h"
+#include "kernel/kernel.h"
 
 
 #define SDT_HEADER_SIZE 36

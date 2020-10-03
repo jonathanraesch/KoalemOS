@@ -1,9 +1,11 @@
 SHELL := /bin/sh
 
-srcdir := .
+SRCDIR := src
+INCLUDEDIR := include
+CONFDIR := config
 BUILDDIR := build
-UEFISRCDIR := $(srcdir)/boot
-KERNELSRCDIR := $(srcdir)/kernel
+UEFISRCDIR := $(SRCDIR)/boot
+KERNELSRCDIR := $(SRCDIR)/kernel
 
 KERNELMAKEFILE := $(KERNELSRCDIR)/Makefile
 UEFIMAKEFILE := $(UEFISRCDIR)/Makefile

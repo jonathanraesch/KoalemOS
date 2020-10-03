@@ -1,7 +1,7 @@
-#include "kernel.h"
-#include "graphics.h"
-#include "acpi.h"
-#include "pci.h"
+#include "kernel/kernel.h"
+#include "kernel/graphics.h"
+#include "kernel/acpi.h"
+#include "kernel/pci.h"
 
 
 void kmain(gop_framebuffer_info* gop_fb_info, void* acpi_x_r_sdt) {
