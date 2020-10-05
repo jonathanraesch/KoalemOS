@@ -1,6 +1,6 @@
 ENVSUBST := envsubst
 
-KERNELASFLAGS := $(ASFLAGS) -w+all
+KERNELASFLAGS := $(ASFLAGS)
 KERNELCFLAGS := $(CFLAGS) -std=c11 -pedantic-errors -Wall -I $(INCLUDEDIR) -I $(LIBCINCLUDEDIR) -mcmodel=large -Og -ggdb
 KERNELLDFLAGS := $(LDFLAGS)
 
@@ -29,7 +29,7 @@ $(OUTCONFDIR)/%: $(CONFDIR)/%
 
 $(KERNELBUILDDIR)/%.s.o: $(KERNELSRCDIR)/%.s
 	mkdir -p $(dir $@)
-	$(AS) $(KERNELASFLAGS) -MD $(@:%.o=%.d) -o $@ $<
+	$(AS) $(KERNELASFLAGS) -o $@ -c $<
 
 $(KERNELBUILDDIR)/%.c.o: $(KERNELSRCDIR)/%.c
 	mkdir -p $(dir $@)

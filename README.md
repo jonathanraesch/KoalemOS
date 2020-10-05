@@ -8,7 +8,6 @@ KoalemOS is a hobby project to explore OS development.
 * qemu-system-x86_64
 * ovmf
 * x86_64-cross-toolchain (see below)
-* nasm
 * mtools
 
 

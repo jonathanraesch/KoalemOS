@@ -1,13 +1,13 @@
 
 
-%ifdef __klibc__
+.ifdef __klibc__
 
-global clock
+.global clock
 clock:
 	rdtsc
 	lfence
-	shl rdx, 32
-	or rax, rdx
+	shl %rdx, 32
+	or %rax, %rdx
 	ret
 
-%endif
+.endif

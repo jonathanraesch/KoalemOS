@@ -1,8 +1,8 @@
 
-LIBCASFLAGS := $(ASFLAGS) -w+all
+LIBCASFLAGS := $(ASFLAGS)
 LIBCCFLAGS := $(CFLAGS) -I $(INCLUDEDIR) -std=c11 -pedantic-errors -Wall -O3
 
-KLIBCASFLAGS := $(ASFLAGS) -w+all -D __klibc__
+KLIBCASFLAGS := $(ASFLAGS) --defsym __klibc__=0
 KLIBCCFLAGS := $(CFLAGS) -I $(INCLUDEDIR) -std=c11 -pedantic-errors -Wall -O3 -D__klibc__
 
 
