@@ -25,7 +25,7 @@ extern kmain
 
 global _kernel_start
 
-section .kernel_start_text
+section .text
 _kernel_start:
 	cli
 

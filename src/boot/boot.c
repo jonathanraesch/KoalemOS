@@ -3,6 +3,8 @@
 #include "boot/paging.h"
 #include "common/graphics.h"
 #include "boot/boot.h"
+#include "common/elf.h"
+#include <stddef.h>
 
 
 typedef struct __attribute__((__packed__)) {
@@ -28,6 +30,7 @@ efi_main (EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table) {
 	EFI_BOOT_SERVICES *bs = system_table->BootServices;
 
 
+	// clear screen
 	EFI_GUID simple_tout_pguid = EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL_GUID;
 	EFI_SIMPLE_TEXT_OUT_PROTOCOL *simple_tout_prot;
 	status = uefi_call_wrapper(bs->LocateProtocol, 3, &simple_tout_pguid, NULL, &simple_tout_prot);
@@ -41,6 +44,7 @@ efi_main (EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table) {
 	}
 
 
+	// read kernel binary from disk
 	EFI_GUID simple_file_system_pguid = EFI_SIMPLE_FILE_SYSTEM_PROTOCOL_GUID;
 	EFI_SIMPLE_FILE_SYSTEM_PROTOCOL *simple_file_system_prot;
 	status = uefi_call_wrapper(bs->LocateProtocol, 3, &simple_file_system_pguid, NULL, &simple_file_system_prot);
@@ -55,7 +59,7 @@ efi_main (EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table) {
 	}
 
 	EFI_FILE_PROTOCOL *file_prot_kernel;
-	status = uefi_call_wrapper(file_prot_root->Open, 5, file_prot_root, &file_prot_kernel, L"\\EFI\\BOOT\\koalemos.bin", EFI_FILE_MODE_READ, 0);
+	status = uefi_call_wrapper(file_prot_root->Open, 5, file_prot_root, &file_prot_kernel, L"\\EFI\\BOOT\\koalemos.elf", EFI_FILE_MODE_READ, 0);
 	if (status != EFI_SUCCESS) {
 		return status;
 	}
@@ -68,32 +72,67 @@ efi_main (EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table) {
 		return status;
 	}
 
-	UINT64 kernel_size = ((EFI_FILE_INFO*)file_info_buf)->FileSize;
-	UINTN kernel_pages = kernel_size/4096 + 1;
-	EFI_PHYSICAL_ADDRESS kernel_addr;
-	status = uefi_call_wrapper(bs->AllocatePages, 4, AllocateAnyPages, EFI_MEM_TYPE_KERNEL, kernel_pages, &kernel_addr);
+	UINT64 kernel_file_size = ((EFI_FILE_INFO*)file_info_buf)->FileSize;
+	UINTN kernel_elf_pages = kernel_file_size/4096 + 1;
+	EFI_PHYSICAL_ADDRESS kernel_elf_addr;
+	status = uefi_call_wrapper(bs->AllocatePages, 4, AllocateAnyPages, EfiLoaderData, kernel_elf_pages, &kernel_elf_addr);
 	if (status != EFI_SUCCESS) {
 		return status;
 	}
 
-	UINTN kernel_buf_size = 4096*kernel_pages;
-	status = uefi_call_wrapper(file_prot_kernel->Read, 3, file_prot_kernel, &kernel_buf_size, (void*)kernel_addr);
+	UINTN kernel_elf_buf_size = 4096*kernel_elf_pages;
+	status = uefi_call_wrapper(file_prot_kernel->Read, 3, file_prot_kernel, &kernel_elf_buf_size, (void*)kernel_elf_addr);
 	if (status != EFI_SUCCESS) {
 		return status;
 	}
-	Print(L"Loaded kernel: ");
-	Print(((EFI_FILE_INFO*)file_info_buf)->FileName);
-	Print(L"\n");
 
-	UINTN paging_pages = PAGING_STRUCTS_SIZE/4096 + 1;
-	EFI_PHYSICAL_ADDRESS paging_buf;
-	status = uefi_call_wrapper(bs->AllocatePages, 4, AllocateAnyPages, EFI_MEM_TYPE_KERNEL, paging_pages, &paging_buf);
+
+	EFI_PHYSICAL_ADDRESS pml4_buf;
+	status = uefi_call_wrapper(bs->AllocatePages, 4, AllocateAnyPages, EFI_MEM_TYPE_KERNEL, 1, &pml4_buf);
 	if (status != EFI_SUCCESS) {
 		return status;
 	}
-	paging_set_up_boot_mapping((void*)paging_buf, get_pml4(), kernel_addr);
+	uint64_t* pml4 = (uint64_t*)pml4_buf;
+	uint64_t* old_pml4 = get_pml4();
+	for(int i = 0; i < 512; i++) {
+		pml4[i] = old_pml4[i];
+	}
+	pml4[511] = ((uintptr_t)pml4) | PAGING_FLAG_PRESENT | PAGING_FLAG_READ_WRITE;
 
 
+	// load kernel into memory
+	elf64_elf_header* kernel_elf_header = (elf64_elf_header*)kernel_elf_addr;
+	uintptr_t pheaders_start = kernel_elf_addr + kernel_elf_header->phoff;
+	size_t pheader_size = kernel_elf_header->phentsize;
+	uint16_t pheader_count = kernel_elf_header->phnum;
+	for(int i = 0; i < pheader_count; i++) {
+		elf64_program_header* ph = (elf64_program_header*)(pheaders_start + pheader_size*i);
+		if(ph->type == PT_LOAD) {
+			UINTN pages = ph->memsz/4096 + 1;
+			EFI_PHYSICAL_ADDRESS addr;
+			status = uefi_call_wrapper(bs->AllocatePages, 4, AllocateAnyPages, EFI_MEM_TYPE_KERNEL, pages, &addr);
+			if (status != EFI_SUCCESS) {
+				return status;
+			}
+			uintptr_t start_page = ph->vaddr&0xFFFFFFFFFFFFF000;
+			for(UINTN offset = 0; offset < pages*0x1000; offset += 0x1000) {
+				status = add_page_mapping(pml4, (void*)(start_page + offset), (void*)(addr + offset), bs);
+				if(status != EFI_SUCCESS) {
+					return status;
+				}
+			}
+			uintptr_t vaddr_offset = ph->vaddr-start_page;
+			for(uintptr_t offset = 0; offset < ph->filesz; offset++) {
+				*(uint8_t*)(addr + vaddr_offset + offset) = *(uint8_t*)(kernel_elf_addr + ph->offset + offset);
+			}
+			for(uintptr_t offset = ph->filesz; offset < ph->memsz; offset++) {
+				*(uint8_t*)(addr + vaddr_offset + offset) = 0;
+			}
+		}
+	}
+
+
+	// set GOP mode and get GOP info
 	EFI_GUID gop_pguid = EFI_GRAPHICS_OUTPUT_PROTOCOL_GUID;
 	EFI_GRAPHICS_OUTPUT_PROTOCOL *gop;
 	status = uefi_call_wrapper(bs->LocateProtocol, 3, &gop_pguid, NULL, &gop);
@@ -144,6 +183,7 @@ efi_main (EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table) {
 	fb_info.addr = (void*)gop->Mode->FrameBufferBase;
 
 
+	// get ACPI table info
 	EFI_GUID acpi20_table_guid_ = ACPI_20_TABLE_GUID;
 	EFI_GUID acpi10_table_guid_ = ACPI_TABLE_GUID;
 	uint64_t* acpi20_table_guid = (uint64_t*)&acpi20_table_guid_;
@@ -194,5 +234,5 @@ efi_main (EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table) {
 
 
 	efi_mmap_data mmap_data = {.descriptors = mmap, .mmap_size=mmap_buf_size, .descriptor_size=descr_size};
-	boot_end((void*)paging_buf, (void*)KERNEL_LINADDR, &mmap_data, &fb_info, acpi_x_r_sdt);
+	boot_end((void*)pml4, (void*)kernel_elf_header->entry, &mmap_data, &fb_info, acpi_x_r_sdt);
 }

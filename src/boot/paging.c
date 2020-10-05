@@ -1,27 +1,50 @@
 #include "boot/paging.h"
+#include "common/mmap.h"
 
 
-/* kernel code can not exceed its 1GB aligned memory region
-   if its base address is 1GB aligned, the maximum size is 1GB */
-void paging_set_up_boot_mapping(void* paging_buf, uint64_t *old_pml4, uintptr_t kernel_begin_physaddr) {
-	uint64_t *pml4 = paging_buf;
-	uint64_t *kernel_pdpt = paging_buf+PML4_SIZE;
-	uint64_t *kernel_pd = paging_buf+PML4_SIZE+PDPT_SIZE;
-	uint64_t *kernel_pts = paging_buf+PML4_SIZE+PDPT_SIZE+PD_SIZE;
-	for(int i = 0; i < 512; i++) {
-		pml4[i] = old_pml4[i];
-	}
+#define PML4_INDEX_OF(VADDR) ((uintptr_t)(VADDR)>>39 & 511)
+#define PDPT_INDEX_OF(VADDR) ((uintptr_t)(VADDR)>>30 & 511)
+#define PD_INDEX_OF(VADDR) ((uintptr_t)(VADDR)>>21 & 511)
+#define PT_INDEX_OF(VADDR) ((uintptr_t)(VADDR)>>12 & 511)
 
-	pml4[PAGING_PML4_OFFSET(KERNEL_LINADDR & 0xFFFFFFFFFFFF)] = ((uintptr_t)kernel_pdpt) | PAGING_FLAG_PRESENT | PAGING_FLAG_READ_WRITE;
-	kernel_pdpt[PAGING_PDPT_OFFSET(KERNEL_LINADDR & 0xFFFFFFFFFFFF)] = ((uintptr_t)kernel_pd) | PAGING_FLAG_PRESENT | PAGING_FLAG_READ_WRITE;
-	for(int i = 0; i < 512; i++) {
-		kernel_pd[i] = ((uintptr_t)&(kernel_pts[i*512])) | PAGING_FLAG_PRESENT | PAGING_FLAG_READ_WRITE;
-	}
-	for(int i = 0; i < 512; i++) {
-		for(int j = 0; j < 512; j++) {
-			kernel_pts[i*512 + j] = (kernel_begin_physaddr + 0x200000*i + 0x1000*j) | PAGING_FLAG_PRESENT | PAGING_FLAG_READ_WRITE;
+#define NEXT_STRUCT(ADDR) ((uint64_t*)((uintptr_t)(ADDR) & 0xFFFFFFFFFFFFF000))
+
+EFI_STATUS add_page_mapping(uint64_t *pml4, void* vaddr, void* paddr, EFI_BOOT_SERVICES* bs) {
+	EFI_STATUS status;
+	if(!(pml4[PML4_INDEX_OF(vaddr)] & PAGING_FLAG_PRESENT)) {
+		EFI_PHYSICAL_ADDRESS addr;
+		status = uefi_call_wrapper(bs->AllocatePages, 4, AllocateAnyPages, EFI_MEM_TYPE_KERNEL, 1, &addr);
+		if (status != EFI_SUCCESS) {
+			return status;
 		}
+		pml4[PML4_INDEX_OF(vaddr)] = addr | PAGING_FLAG_PRESENT | PAGING_FLAG_READ_WRITE;
 	}
+	pml4[PML4_INDEX_OF(vaddr)] |= PAGING_FLAG_READ_WRITE;
 
-	pml4[511] = ((uintptr_t)pml4) | PAGING_FLAG_PRESENT | PAGING_FLAG_READ_WRITE;
+	uint64_t* pdpt = NEXT_STRUCT(pml4[PML4_INDEX_OF(vaddr)]);
+	if(!(pdpt[PDPT_INDEX_OF(vaddr)] & PAGING_FLAG_PRESENT)) {
+		EFI_PHYSICAL_ADDRESS addr;
+		status = uefi_call_wrapper(bs->AllocatePages, 4, AllocateAnyPages, EFI_MEM_TYPE_KERNEL, 1, &addr);
+		if (status != EFI_SUCCESS) {
+			return status;
+		}
+		pdpt[PDPT_INDEX_OF(vaddr)] = addr | PAGING_FLAG_PRESENT | PAGING_FLAG_READ_WRITE;
+	}
+	pdpt[PDPT_INDEX_OF(vaddr)] |= PAGING_FLAG_READ_WRITE;
+
+	uint64_t* pd = NEXT_STRUCT(pdpt[PDPT_INDEX_OF(vaddr)]);
+	if(!(pd[PD_INDEX_OF(vaddr)] & PAGING_FLAG_PRESENT)) {
+		EFI_PHYSICAL_ADDRESS addr;
+		status = uefi_call_wrapper(bs->AllocatePages, 4, AllocateAnyPages, EFI_MEM_TYPE_KERNEL, 1, &addr);
+		if (status != EFI_SUCCESS) {
+			return status;
+		}
+		pd[PD_INDEX_OF(vaddr)] = addr | PAGING_FLAG_PRESENT | PAGING_FLAG_READ_WRITE;
+	}
+	pd[PD_INDEX_OF(vaddr)] |= PAGING_FLAG_READ_WRITE;
+
+	uint64_t* pt = NEXT_STRUCT(pd[PD_INDEX_OF(vaddr)]);
+	pt[PT_INDEX_OF(vaddr)] = (uintptr_t)paddr | PAGING_FLAG_PRESENT | PAGING_FLAG_READ_WRITE;
+
+	return EFI_SUCCESS;
 }

@@ -50,6 +50,7 @@ The configurable options are set by environment variables:
 * revisit ACPI table paging
   * is mapping the first page of ACPI tables is always sufficient to read header information?
   * possibly unmap tables, when not needed
+* fix phys_mmap space restrictions
 
 ### misc
 * extend graphical capabilities
@@ -57,5 +58,3 @@ The configurable options are set by environment variables:
   * add support for displaying text/bitmaps
   * add drivers for other graphics output interfaces
 * implement PCI 3.0 compatible PCIe configuration mechanism
-* load kernel as ELF file
-  * fix phys_mmap space restrictions
