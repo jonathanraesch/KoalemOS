@@ -51,6 +51,9 @@ The configurable options are set by environment variables:
   * possibly unmap tables, when not needed
 * fix phys_mmap space restrictions
 
+### libc
+* improve memmove performance
+
 ### misc
 * extend graphical capabilities
   * add support for other GOP pixel formats
