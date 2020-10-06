@@ -2,7 +2,7 @@
 #include <stdint.h>
 
 
-void* memcpy(void *dest, const void *src, size_t count) {
+void* memcpy(void *restrict dest, const void *restrict src, size_t count) {
 	size_t qword_count = count >> 3;
 	size_t byte_count = count&7u;
 	while(byte_count) {
