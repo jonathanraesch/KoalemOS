@@ -2,6 +2,24 @@
 #include <stdint.h>
 
 
+void* memset(void* dest, int ch, size_t count) {
+	size_t qword_count = count >> 3;
+	size_t byte_count = count&7u;
+	uint64_t big_val = (uint8_t)ch;
+	big_val = big_val<<8 | big_val;
+	big_val = big_val<<16 | big_val;
+	big_val = big_val<<32 | big_val;
+	while(byte_count) {
+		byte_count--;
+		((uint8_t*)dest)[qword_count*8 + byte_count] = (uint8_t)ch;
+	}
+	while(qword_count) {
+		qword_count--;
+		((uint64_t*)dest)[qword_count] = big_val;
+	}
+	return dest;
+}
+
 void* memcpy(void* restrict dest, const void* restrict src, size_t count) {
 	size_t qword_count = count >> 3;
 	size_t byte_count = count&7u;
