@@ -46,17 +46,17 @@ char* strchr(const char* str, int ch) {
 }
 
 char* strrchr(const char* str, int ch) {
-    char* ret = 0;
+	char* ret = 0;
 	while(*str) {
-        if((unsigned char)*str == (char)ch) {
-            ret = (char*)str;
-        }
-        str++;
-    }
-    if(!(char)ch && !*str) {
-        return (char*)str;
-    }
-    return ret;
+		if((unsigned char)*str == (char)ch) {
+			ret = (char*)str;
+		}
+		str++;
+	}
+	if(!(char)ch && !*str) {
+		return (char*)str;
+	}
+	return ret;
 }
 
 
