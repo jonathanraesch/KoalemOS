@@ -3,6 +3,7 @@
 
 
 char* strcpy(char* restrict dest, const char* restrict src);
+char* strcat(char* restrict dest, const char* restrict src);
 
 size_t strlen(const char* str);
 int strcmp(const char* lhs, const char* rhs);

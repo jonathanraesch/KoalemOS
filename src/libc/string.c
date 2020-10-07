@@ -13,6 +13,20 @@ char* strcpy(char* restrict dest, const char* restrict src) {
 	return dest;
 }
 
+char* strcat(char* restrict dest, const char* restrict src) {
+	char* ret = dest;
+	while(*dest) {
+		dest++;
+	}
+	size_t i = 0;
+	while(src[i]) {
+		dest[i] = src[i];
+		i++;
+	}
+	dest[i] = '\0';
+	return ret;
+}
+
 
 size_t strlen(const char* str) {
 	size_t len = 0;
