@@ -1,5 +1,6 @@
 #include "libc/string.h"
 #include <stdint.h>
+#include <stdbool.h>
 
 
 size_t strlen(const char* str) {
@@ -57,6 +58,33 @@ char* strrchr(const char* str, int ch) {
 		return (char*)str;
 	}
 	return ret;
+}
+
+char* strstr(const char* str, const char* substr) {
+	size_t substr_len = strlen(substr);
+	if(substr_len == 0) {
+		return (char*)str;
+	}
+
+	while(*str) {
+		if(*str == *substr) {
+			size_t i = 1;
+			bool match = true;
+			for(; i < substr_len; i++) {
+				if(str[i] != substr[i]) {
+					match = false;
+					break;
+				}
+			}
+			if(match) {
+				return (char*)str;
+			}
+			str += i;
+		} else {
+			str++;
+		}
+	}
+	return 0;
 }
 
 
