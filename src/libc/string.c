@@ -8,6 +8,17 @@ size_t strlen(const char* str) {
 	return len;
 }
 
+int strcmp(const char* lhs, const char* rhs) {
+	size_t i = 0;
+	while(lhs[i] == rhs[i]) {
+		if(!lhs[i]) {
+			return 0;
+		}
+		i++;
+	}
+	return (int)lhs[i] - (int)rhs[i];
+}
+
 
 int memcmp(const void* lhs, const void* rhs, size_t count) {
 	size_t qword_count = count >> 3;
