@@ -45,6 +45,20 @@ char* strchr(const char* str, int ch) {
 	return str;
 }
 
+char* strrchr(const char* str, int ch) {
+    char* ret = 0;
+	while(*str) {
+        if((unsigned char)*str == (char)ch) {
+            ret = str;
+        }
+        str++;
+    }
+    if(!(char)ch && !*str) {
+        return str;
+    }
+    return ret;
+}
+
 
 int memcmp(const void* lhs, const void* rhs, size_t count) {
 	size_t qword_count = count >> 3;
