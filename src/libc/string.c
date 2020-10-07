@@ -36,25 +36,25 @@ int strncmp(const char* lhs, const char* rhs, size_t count) {
 char* strchr(const char* str, int ch) {
 	while(*str) {
 		if((unsigned char)*str == (char)ch) {
-			return str;
+			return (char*)str;
 		}
 	}
 	if((char)ch) {
 		return 0;
 	}
-	return str;
+	return (char*)str;
 }
 
 char* strrchr(const char* str, int ch) {
     char* ret = 0;
 	while(*str) {
         if((unsigned char)*str == (char)ch) {
-            ret = str;
+            ret = (char*)str;
         }
         str++;
     }
     if(!(char)ch && !*str) {
-        return str;
+        return (char*)str;
     }
     return ret;
 }
