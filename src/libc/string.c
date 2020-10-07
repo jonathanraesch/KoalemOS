@@ -33,6 +33,18 @@ int strncmp(const char* lhs, const char* rhs, size_t count) {
 	return 0;
 }
 
+char* strchr(const char* str, int ch) {
+	while(*str) {
+		if((unsigned char)*str == (char)ch) {
+			return str;
+		}
+	}
+	if((char)ch) {
+		return 0;
+	}
+	return str;
+}
+
 
 int memcmp(const void* lhs, const void* rhs, size_t count) {
 	size_t qword_count = count >> 3;
