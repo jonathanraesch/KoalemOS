@@ -2,6 +2,23 @@
 #include <stdint.h>
 
 
+int memcmp(const void* lhs, const void* rhs, size_t count) {
+	size_t qword_count = count >> 3;
+	int last_qword = 0;
+	for(; last_qword < qword_count; last_qword++) {
+		if(((uint64_t*)lhs)[last_qword] != ((uint64_t*)rhs)[last_qword]) {
+			break;
+		}
+	}
+	for(int i = last_qword << 3; i < count; i++) {
+		int diff = (int)((uint8_t*)lhs)[i] - (int)((uint8_t*)rhs)[i];
+		if(diff) {
+			return diff;
+		}
+	}
+	return 0;
+}
+
 void* memset(void* dest, int ch, size_t count) {
 	size_t qword_count = count >> 3;
 	size_t byte_count = count&7u;
