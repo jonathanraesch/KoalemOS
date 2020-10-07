@@ -2,6 +2,13 @@
 #include <stdint.h>
 
 
+size_t strlen(const char* str) {
+	size_t len = 0;
+	while(str[len++]);
+	return len;
+}
+
+
 int memcmp(const void* lhs, const void* rhs, size_t count) {
 	size_t qword_count = count >> 3;
 	int last_qword = 0;
