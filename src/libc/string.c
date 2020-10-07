@@ -19,6 +19,18 @@ int strcmp(const char* lhs, const char* rhs) {
 	return (int)lhs[i] - (int)rhs[i];
 }
 
+int strncmp(const char* lhs, const char* rhs, size_t count) {
+	for(size_t i = 0; i < count; i++) {
+		if(lhs[i] != rhs[i]) {
+			return (int)lhs[i] - (int)rhs[i];
+		}
+		if(!lhs[i]) {
+			return 0;
+		}
+	}
+	return 0;
+}
+
 
 int memcmp(const void* lhs, const void* rhs, size_t count) {
 	size_t qword_count = count >> 3;
