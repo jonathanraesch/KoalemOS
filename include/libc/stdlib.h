@@ -3,3 +3,5 @@
 
 void* malloc(size_t size);
 void free(void* ptr);
+
+long strtol(const char* restrict str, char** restrict str_end, int base);
