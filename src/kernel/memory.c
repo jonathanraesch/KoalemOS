@@ -286,7 +286,7 @@ void* kmalloc(size_t size) {
 			.used = false,
 			.last = entry, .next = entry->next,
 		};
-		entry->size -= (size + sizeof(heap_entry));
+		entry->size = size;
 		if(entry->next) {
 			entry->next->last = next_entry;
 		}
