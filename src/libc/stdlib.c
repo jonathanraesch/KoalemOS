@@ -99,3 +99,59 @@ void free(void* ptr) {
 
 
 #endif
+
+#include <stdint.h>
+
+
+void memswap(void* lhs, void* rhs, size_t count) {
+	for(size_t i = 0; i < count; i++) {
+		uint8_t tmp = ((uint8_t*)lhs)[i];
+		((uint8_t*)lhs)[i] = ((uint8_t*)rhs)[i];
+		((uint8_t*)rhs)[i] = tmp;
+	}
+}
+
+size_t partition(void* ptr, size_t count, size_t size, int (*comp)(const void *, const void *), size_t piv_index) {
+	memswap(ptr, (void*)((uintptr_t)ptr + piv_index), size);
+	size_t i = 1;
+	size_t j = count-1;
+	while(i<j) {
+		if(comp((void*)((uintptr_t)ptr + i), ptr) <= 0) {
+			i++;
+			continue;
+		}
+		if(comp((void*)((uintptr_t)ptr + j), ptr) > 0) {
+			j--;
+			continue;
+		}
+		memswap((void*)((uintptr_t)ptr + i), (void*)((uintptr_t)ptr + j), size);
+		i++;
+		j--;
+	}
+	if(i > 1) {
+		if(comp((void*)((uintptr_t)ptr + i), ptr) > 0) {
+			memswap(ptr, (void*)((uintptr_t)ptr + i-1), size);
+			return i-1;
+		} else {
+			memswap(ptr, (void*)((uintptr_t)ptr + i), size);
+			return i;
+		}
+	}
+	return 0;
+}
+
+void qsort(void* ptr, size_t count, size_t size, int (*comp)(const void *, const void *)) {
+	if(count <= 2) {
+		if(count < 2) {
+			return;
+		}
+		if(comp((void*)((uintptr_t)ptr + 1), ptr) < 0) {
+			memswap(ptr, (void*)((uintptr_t)ptr + 1), size);
+		}
+		return;
+	}
+	size_t piv_index = size/2;
+	piv_index = partition(ptr, count, size, comp, piv_index);
+	qsort(ptr, piv_index, size, comp);
+	qsort((void*)((uintptr_t)ptr + piv_index + 1), count-piv_index-1, size, comp);
+}
