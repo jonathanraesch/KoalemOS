@@ -7,3 +7,10 @@ int isalnum(int ch) {
 	}
 	return 0;
 }
+
+int isdigit(int ch) {
+	if(ch >= '0' && ch <= '9') {
+		return 1;
+	}
+	return 0;
+}
