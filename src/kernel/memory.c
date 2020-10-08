@@ -5,6 +5,7 @@
 #include "common/mmap.h"
 #include <stdbool.h>
 #include <stdalign.h>
+#include <string.h>
 
 
 extern void invalidate_tlbs_for(void* vaddr);
@@ -294,6 +295,85 @@ void* kmalloc(size_t size) {
 	}
 
 	return (void*)entry->memory;
+}
+
+void* krealloc(void* ptr, size_t size) {
+	size = ALIGN_UP(size, alignof(max_align_t));
+	heap_entry* entry = (heap_entry*)((uintptr_t)ptr - sizeof(heap_entry));
+
+	if(size < entry->size) {
+		if(entry->next) {
+			if(!entry->next->used) {
+				memmove((void*)((uintptr_t)entry->memory + size), (void*)entry->next, sizeof(heap_entry));
+				entry->next = (heap_entry*)((uintptr_t)entry->memory + size);
+				entry->next->size += entry->size - size;
+				if(entry->next->next) {
+					entry->next->next->last = entry->next;
+				}
+				return ptr;
+			}
+		}
+		if(entry->size - size >= sizeof(heap_entry)+sizeof(max_align_t)) {
+			heap_entry* next_entry = (heap_entry*)((uintptr_t)entry->memory + size);
+			*next_entry = (heap_entry){
+				.size = entry->size - (size + sizeof(heap_entry)),
+				.used = false,
+				.last = entry, .next = entry->next,
+			};
+			entry->size = size;
+			if(entry->next) {
+				entry->next->last = next_entry;
+			}
+			entry->next = next_entry;
+		}
+		return ptr;
+	}
+	if(size == entry->size) {
+		return ptr;
+	}
+
+	size_t tot_size = entry->size;
+	heap_entry* cur_entry = entry;
+	while(tot_size < size) {
+		cur_entry = cur_entry->next;
+		if(!cur_entry) {
+			break;
+		}
+		if(cur_entry->used) {
+			break;
+		}
+		tot_size = cur_entry->size + sizeof(heap_entry);
+	}
+
+	if(tot_size >= size) {
+		entry->next = cur_entry->next;
+		if(entry->next) {
+			entry->next->last = entry;
+		}
+		entry->size = tot_size;
+		if(entry->size > size+sizeof(heap_entry)+sizeof(max_align_t)) {
+			heap_entry* next_entry = (heap_entry*)((uintptr_t)entry->memory + size);
+			*next_entry = (heap_entry){
+				.size = entry->size - (size + sizeof(heap_entry)),
+				.used = false,
+				.last = entry, .next = entry->next,
+			};
+			entry->size -= (next_entry->size + sizeof(heap_entry));
+			if(entry->next) {
+				entry->next->last = next_entry;
+			}
+			entry->next = next_entry;
+		}
+		return ptr;
+	}
+
+	void* ret = kmalloc(size);
+	if(ret) {
+		memcpy(ret, ptr, entry->size);
+		kfree(ptr);
+		return ret;
+	}
+	return 0;
 }
 
 void kfree(void* ptr) {
