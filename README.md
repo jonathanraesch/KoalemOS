@@ -53,6 +53,7 @@ The configurable options are set by environment variables:
 
 ### libc
 * improve memmove performance
+* make kernel errno thread-local when implementing multithreading
 
 ### misc
 * extend graphical capabilities
