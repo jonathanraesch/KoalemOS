@@ -88,6 +88,11 @@ long strtol(const char* restrict str, char** restrict str_end, int base) {
 void* malloc(size_t size) {
 	return kmalloc(size);
 }
+
+void* realloc(void* ptr, size_t size) {
+	return krealloc(ptr, size);
+}
+
 void free(void* ptr) {
 	kfree(ptr);
 }
