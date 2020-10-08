@@ -4,6 +4,7 @@
 #include "common/paging.h"
 #include "common/mmap.h"
 #include <stdbool.h>
+#include <stdalign.h>
 
 
 extern void invalidate_tlbs_for(void* vaddr);
@@ -246,7 +247,11 @@ void init_memory_management(efi_mmap_data* mmap_data) {
 }
 
 
+#define ALIGN_DOWN(ADDR, ALIGN) ((uintptr_t)(ADDR)&~((uintptr_t)(ALIGN)-1u))
+#define ALIGN_UP(ADDR, ALIGN) (ALIGN_DOWN((uintptr_t)(ADDR)-1, (uintptr_t)(ALIGN))+(uintptr_t)(ALIGN))
+
 void* kmalloc(size_t size) {
+	size = ALIGN_UP(size, alignof(max_align_t));
 	heap_entry* entry = first_heap_entry;
 
 	while(entry) {
