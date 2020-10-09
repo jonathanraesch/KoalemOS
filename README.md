@@ -33,7 +33,6 @@ The configurable options are set by environment variables:
 ### build system
 * verify build requirements
 * check header file dependency management in Makefile
-* add debugging for assembly code
 * make separate debug build
 
 ### error checking/prevention
