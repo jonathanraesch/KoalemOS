@@ -4,7 +4,7 @@ KoalemOS is a hobby project to explore OS development.
 
 ## License
 
-This software is copyright © 2020 Jonathan Räsch and is released under the GNU GPL v3 license (`LICENSE?`), unless otherwise specified.
+This software is copyright © 2020 Jonathan Räsch and is released under the GNU GPL v3 license (`LICENSE`), unless otherwise specified.
 
 Portions of this software are copyright © 2020 The FreeType Project (www.freetype.org).  All rights reserved.
 Those portions can be found in `include/freetype` and are released under the FreeType License (`FTL.TXT`).
