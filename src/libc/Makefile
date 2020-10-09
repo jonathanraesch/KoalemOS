@@ -15,8 +15,8 @@ KLIBCOBJS := $(LIBCSRCS:$(LIBCSRCDIR)/%=$(KLIBCBUILDDIR)/%.o)
 LIBCDEPS := $(LIBCOBJS:%.o=%.d)
 KLIBCDEPS := $(KLIBCOBJS:%.o=%.d)
 
-LIBC := $(LIBCBUILDDIR)/libc.a
-KLIBC := $(KLIBCBUILDDIR)/klibc.a
+LIBC := $(USERLIBDIR)/libc.a
+KLIBC := $(KERNELLIBDIR)/libc.a
 
 
 -include $(LIBCDEPS)
@@ -24,6 +24,7 @@ KLIBC := $(KLIBCBUILDDIR)/klibc.a
 
 
 $(LIBC): $(LIBCOBJS)
+	mkdir -p $(dir $@)
 	$(RM) -f $@
 	$(AR) -crs $@ $^
 
@@ -37,6 +38,7 @@ $(LIBCBUILDDIR)/%.c.o: $(LIBCSRCDIR)/%.c
 
 
 $(KLIBC): $(KLIBCOBJS)
+	mkdir -p $(dir $@)
 	$(RM) -f $@
 	$(AR) -crs $@ $^
 
