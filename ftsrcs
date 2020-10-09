@@ -1,0 +1,13 @@
+/base/ftsystem.c
+/base/ftinit.c
+/base/ftdebug.c
+
+/base/ftbase.c
+
+/base/ftbbox.c
+/base/ftglyph.c
+
+/truetype/truetype.c
+
+/raster/raster.c
+/smooth/smooth.c

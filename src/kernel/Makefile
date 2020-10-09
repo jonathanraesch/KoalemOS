@@ -1,7 +1,7 @@
 ENVSUBST := envsubst
 
 KERNELASFLAGS := $(ASFLAGS)
-KERNELCFLAGS := $(CFLAGS) -std=c11 -pedantic-errors -Wall -I $(INCLUDEDIR) -I $(LIBCINCLUDEDIR) -mcmodel=large -Og -ggdb
+KERNELCFLAGS := $(CFLAGS) -std=c11 -pedantic-errors -Wall -I $(INCLUDEDIR) -I $(LIBCINCLUDEDIR) -I $(LIBFTINCDIR) -mcmodel=large -Og -ggdb
 KERNELLDFLAGS := $(LDFLAGS) -L $(KERNELLIBDIR)
 
 KERNELBUILDDIR := $(BUILDDIR)/kernel
@@ -21,7 +21,7 @@ export KERNELBUILDDIR
 
 
 $(KERNELBINARY): $(KERNELOBJS) $(LDSCRIPT) $(KLIBC) $(LIBFREETYPE)
-	$(LD) -n -T $(LDSCRIPT) $(KERNELLDFLAGS) -o $@ $(KERNELOBJS) -lc
+	$(LD) -n -T $(LDSCRIPT) $(KERNELLDFLAGS) -o $@ $(KERNELOBJS) -lfreetype -lc
 
 $(OUTCONFDIR)/%: $(CONFDIR)/%
 	mkdir -p $(OUTCONFDIR)
