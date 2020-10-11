@@ -3,5 +3,7 @@
 #include <stdint.h>
 
 
-void fill_screen(float red, float green, float blue);
 void init_graphics(gop_framebuffer_info* info);
+
+void fill_screen(float red, float green, float blue);
+void print_char(uint32_t ch);

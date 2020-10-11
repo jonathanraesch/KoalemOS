@@ -6,6 +6,7 @@ LIBCINCLUDEDIR := $(INCLUDEDIR)/libc
 CONFDIR := config
 BUILDDIR := build
 LIBDIR := $(BUILDDIR)/lib
+FONTDIR := fonts
 KERNELLIBDIR := $(LIBDIR)/kernel
 USERLIBDIR := $(LIBDIR)/user
 UEFISRCDIR := $(SRCDIR)/boot
