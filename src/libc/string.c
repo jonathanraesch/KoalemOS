@@ -127,6 +127,15 @@ char* strstr(const char* str, const char* substr) {
 }
 
 
+void* memchr(const void* ptr, int ch, size_t count) {
+	for(size_t i = 0; i < count; i++) {
+		if(((unsigned char*)ptr)[i] == (unsigned char)ch) {
+			return (void*)((uintptr_t)ptr + i);
+		}
+	}
+	return 0;
+}
+
 int memcmp(const void* lhs, const void* rhs, size_t count) {
 	size_t qword_count = count >> 3;
 	int last_qword = 0;

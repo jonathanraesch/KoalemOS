@@ -59,7 +59,7 @@ The configurable options are set by environment variables:
 * fix phys_mmap space restrictions
 
 ### libc
-* improve memmove performance
+* check for optimizations of str- and mem- functions in string.h
 * make kernel errno thread-local when implementing multithreading
 * improve qsort performance (change pivot to median of three, use introsort)
 
