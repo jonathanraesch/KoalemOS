@@ -61,7 +61,6 @@ The configurable options are set by environment variables:
 ### libc
 * improve memmove performance
 * make kernel errno thread-local when implementing multithreading
-* check C standard for strtol handling of "08" and "09"
 * improve qsort performance (change pivot to median of three, use introsort)
 
 ### misc
