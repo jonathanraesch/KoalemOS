@@ -7,7 +7,12 @@
 /base/ftbbox.c
 /base/ftglyph.c
 
+/base/ftbitmap.c
+
+/sfnt/sfnt.c
 /truetype/truetype.c
 
-/raster/raster.c
 /smooth/smooth.c
+
+/gzip/ftgzip.c
+/psnames/psnames.c
