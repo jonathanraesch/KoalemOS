@@ -30,7 +30,7 @@ static uint32_t next_x;
 static uint32_t next_y;
 
 
-pixel_bgrx8u col_lerp(pixel_bgrx8u a, pixel_bgrx8u b, float t) {
+static pixel_bgrx8u col_lerp(pixel_bgrx8u a, pixel_bgrx8u b, float t) {
 	pixel_bgrx8u ret;
 	ret.blue = ((float)b.blue - (float)a.blue)*t + a.blue;
 	ret.green = ((float)b.green - (float)a.green)*t + a.green;
@@ -40,7 +40,7 @@ pixel_bgrx8u col_lerp(pixel_bgrx8u a, pixel_bgrx8u b, float t) {
 }
 
 
-void init_freetype(int font_size) {
+static void init_freetype(int font_size) {
 	FT_Error ft_error = FT_Init_FreeType(&ft_library);
 	if(ft_error) {
 		kernel_panic();

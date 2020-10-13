@@ -2,7 +2,7 @@
 #include "kernel/memory.h"
 
 
-void test_kernel_heap() {
+static void test_kernel_heap() {
 	void* a = kmalloc(100);
 	void* b = kmalloc(0x2000);
 	void* c = kmalloc(5);

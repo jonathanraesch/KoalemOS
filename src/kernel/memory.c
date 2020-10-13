@@ -62,7 +62,7 @@ static heap_entry* first_heap_entry;
 static heap_entry* last_heap_entry;
 
 
-void* alloc_phys_pages(uint64_t pages) {
+static void* alloc_phys_pages(uint64_t pages) {
 	void* base_addr = mmap_get_pages(&phys_mmap, pages);
 	if(base_addr) {
 		return base_addr;
@@ -71,7 +71,7 @@ void* alloc_phys_pages(uint64_t pages) {
 }
 
 // TODO: if feasible, resize memory map after merge
-int free_phys_pages(void* base_addr, uint64_t count) {
+static int free_phys_pages(void* base_addr, uint64_t count) {
 	if(mmap_add_range_merge(&phys_mmap, base_addr, count)) {
 		return true;
 	}
@@ -185,7 +185,7 @@ void unmap_page(void* vaddr) {
 }
 
 
-void init_mmap(efi_mmap_data* mmap_data) {
+static void init_mmap(efi_mmap_data* mmap_data) {
 	void* const efi_mmap_start = mmap_data->descriptors;
 	void* const efi_mmap_end = (void*)((uintptr_t)mmap_data->descriptors + mmap_data->mmap_size);
 	const size_t efi_mmap_desc_size = mmap_data->descriptor_size;
@@ -232,7 +232,7 @@ void init_mmap(efi_mmap_data* mmap_data) {
 	}
 }
 
-void init_heap() {
+static void init_heap() {
 	last_heap_entry = (heap_entry*)kernel_heap_start;
 	*last_heap_entry = (heap_entry){
 		.size = KERNEL_HEAP_INIT_SIZE-sizeof(heap_entry),
