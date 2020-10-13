@@ -17,6 +17,9 @@ typedef struct {
 
 gop_framebuffer_info fb_info;
 
+pixel_bgrx8u bg_col = {.red=0, .green=0, .blue=0, ._reserved=0};
+pixel_bgrx8u fg_col = {.red=255, .green=255, .blue=255, ._reserved=0};
+
 FT_Library ft_library;
 FT_Face ft_face;
 
@@ -24,6 +27,16 @@ uint32_t adv_x;
 uint32_t adv_y;
 uint32_t next_x;
 uint32_t next_y;
+
+
+pixel_bgrx8u col_lerp(pixel_bgrx8u a, pixel_bgrx8u b, float t) {
+	pixel_bgrx8u ret;
+	ret.blue = ((float)b.blue - (float)a.blue)*t + a.blue;
+	ret.green = ((float)b.green - (float)a.green)*t + a.green;
+	ret.red = ((float)b.red - (float)a.red)*t + a.red;
+	ret._reserved = 0;
+	return ret;
+}
 
 
 void init_freetype(int font_size) {
@@ -113,13 +126,8 @@ void print_char(uint32_t ch) {
 	pixel_bgrx8u* fb = (pixel_bgrx8u*)fb_info.addr;
 	for(uint32_t y = 0; y < ft_bm->rows; y++) {
 		for(uint32_t x = 0; x < ft_bm->width; x++) {
-			uint8_t val = 255 - ft_bm->buffer[y*ft_bm->pitch + x];
-			pixel_bgrx8u col = {
-				.red = val,
-				.green = val,
-				.blue = val,
-				._reserved = 0
-			};
+			float val = ft_bm->buffer[y*ft_bm->pitch + x]/255.0;
+			pixel_bgrx8u col = col_lerp(bg_col, fg_col, val);
 			uint32_t y_val = next_y+y-ft_face->glyph->bitmap_top;
 			uint32_t x_val = next_x+x+ft_face->glyph->bitmap_left;
 			fb[y_val*fb_info.width + x_val] = col;
