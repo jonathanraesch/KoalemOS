@@ -11,9 +11,9 @@ enum {
 	XSDT
 } sdt_type;
 
-uint32_t* rsdt_entries;
-uint64_t* xsdt_entries;
-uint32_t sdt_entry_count;
+static uint32_t* rsdt_entries;
+static uint64_t* xsdt_entries;
+static uint32_t sdt_entry_count;
 
 
 void init_acpi(void* acpi_x_r_sdt) {

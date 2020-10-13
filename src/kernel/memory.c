@@ -52,14 +52,14 @@ typedef struct _heap_entry {
 
 #define PHYS_MMAP_INIT_MAX_RANGE_COUNT (0x1000 / sizeof(memory_range))
 _Static_assert (!((PHYS_MMAP_INIT_MAX_RANGE_COUNT * sizeof(memory_range)) & 0xfff), "physcial memory map not page-aligned");
-memory_range _phys_mmap_range_buf[PHYS_MMAP_INIT_MAX_RANGE_COUNT] __attribute__ ((section ("PHYS_MMAP"))) = {0};
-memory_map phys_mmap = {.memory_ranges=_phys_mmap_range_buf, .range_count=0, .max_range_count=PHYS_MMAP_INIT_MAX_RANGE_COUNT};
+static memory_range _phys_mmap_range_buf[PHYS_MMAP_INIT_MAX_RANGE_COUNT] __attribute__ ((section ("PHYS_MMAP"))) = {0};
+static memory_map phys_mmap = {.memory_ranges=_phys_mmap_range_buf, .range_count=0, .max_range_count=PHYS_MMAP_INIT_MAX_RANGE_COUNT};
 
 #define KERNEL_HEAP_INIT_SIZE 0x1000
-max_align_t kernel_heap_start[KERNEL_HEAP_INIT_SIZE] __attribute__ ((section ("KERNEL_HEAP"))) = {0};
-max_align_t* kernel_heap_end = kernel_heap_start + KERNEL_HEAP_INIT_SIZE;
-heap_entry* first_heap_entry;
-heap_entry* last_heap_entry;
+static max_align_t kernel_heap_start[KERNEL_HEAP_INIT_SIZE] __attribute__ ((section ("KERNEL_HEAP"))) = {0};
+static max_align_t* kernel_heap_end = kernel_heap_start + KERNEL_HEAP_INIT_SIZE;
+static heap_entry* first_heap_entry;
+static heap_entry* last_heap_entry;
 
 
 void* alloc_phys_pages(uint64_t pages) {

@@ -27,7 +27,7 @@ typedef struct {
 
 
 #define IDT_ENTRY_COUNT 22
-idt_gate_descr idt[IDT_ENTRY_COUNT];
+static idt_gate_descr idt[IDT_ENTRY_COUNT];
 
 
 void setup_idt() {
