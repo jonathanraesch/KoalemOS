@@ -412,4 +412,16 @@ void kfree(void* ptr) {
 			}
 		}
 	}
+
+	if(!entry->next && entry->last && (void*)ALIGN_UP(entry->memory + sizeof(max_align_t), 0x1000) != kernel_heap_end) {
+		uintptr_t new_end = ALIGN_UP(entry, 0x1000);
+		if(entry == (void*)new_end) {
+			last_heap_entry = entry->last;
+		} else {
+			entry->size = new_end - (uintptr_t)entry - sizeof(heap_entry);
+		}
+		uint64_t page_count = ((uintptr_t)kernel_heap_end - new_end)/0x1000;
+		free_phys_pages((void*)new_end, page_count);
+		kernel_heap_end = (max_align_t*)new_end;
+	}
 }
