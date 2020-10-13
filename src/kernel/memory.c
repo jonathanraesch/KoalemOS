@@ -290,6 +290,8 @@ void* kmalloc(size_t size) {
 		entry->size = size;
 		if(entry->next) {
 			entry->next->last = next_entry;
+		} else {
+			last_heap_entry = next_entry;
 		}
 		entry->next = next_entry;
 	}
@@ -309,6 +311,8 @@ void* krealloc(void* ptr, size_t size) {
 				entry->next->size += entry->size - size;
 				if(entry->next->next) {
 					entry->next->next->last = entry->next;
+				} else {
+					last_heap_entry = entry->next;
 				}
 				return ptr;
 			}
@@ -323,6 +327,8 @@ void* krealloc(void* ptr, size_t size) {
 			entry->size = size;
 			if(entry->next) {
 				entry->next->last = next_entry;
+			} else {
+				last_heap_entry = next_entry;
 			}
 			entry->next = next_entry;
 		}
@@ -349,6 +355,8 @@ void* krealloc(void* ptr, size_t size) {
 		entry->next = cur_entry->next;
 		if(entry->next) {
 			entry->next->last = entry;
+		} else {
+			last_heap_entry = entry;
 		}
 		entry->size = tot_size;
 		if(entry->size > size+sizeof(heap_entry)+sizeof(max_align_t)) {
@@ -361,6 +369,8 @@ void* krealloc(void* ptr, size_t size) {
 			entry->size -= (next_entry->size + sizeof(heap_entry));
 			if(entry->next) {
 				entry->next->last = next_entry;
+			} else {
+				last_heap_entry = next_entry;
 			}
 			entry->next = next_entry;
 		}
@@ -384,6 +394,8 @@ void kfree(void* ptr) {
 			entry->last->size += sizeof(heap_entry) + entry->size;
 			if(entry->next) {
 				entry->next->last = entry->last;
+			} else {
+				last_heap_entry = entry->last;
 			}
 			entry->last->next = entry->next;
 			entry = entry->last;
@@ -395,6 +407,8 @@ void kfree(void* ptr) {
 			entry->next = entry->next->next;
 			if(entry->next) {
 				entry->next->last = entry;
+			} else {
+				last_heap_entry = entry;
 			}
 		}
 	}
