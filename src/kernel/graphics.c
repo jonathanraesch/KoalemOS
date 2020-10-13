@@ -14,11 +14,16 @@ typedef struct {
 	uint8_t _reserved;
 } pixel_bgrx8u;
 
-gop_framebuffer_info fb_info;
 
+gop_framebuffer_info fb_info;
 
 FT_Library ft_library;
 FT_Face ft_face;
+
+uint32_t adv_x;
+uint32_t adv_y;
+uint32_t next_x;
+uint32_t next_y;
 
 
 void init_freetype(int font_size) {
@@ -36,6 +41,23 @@ void init_freetype(int font_size) {
 	if(ft_error) {
 		kernel_panic();
 	}
+
+
+	FT_UInt glyph_index = FT_Get_Char_Index(ft_face, ' ');
+	ft_error = FT_Load_Glyph(ft_face, glyph_index, FT_LOAD_DEFAULT);
+	if(ft_error) {
+		kernel_panic();
+	}
+
+	ft_error = FT_Render_Glyph(ft_face->glyph, FT_RENDER_MODE_NORMAL);
+	if(ft_error) {
+		kernel_panic();
+	}
+
+	adv_x = ft_face->glyph->linearHoriAdvance/65535.0;
+	adv_y = ft_face->glyph->linearVertAdvance/65535.0;
+	next_x = 0;
+	next_y = adv_y;
 }
 
 void init_graphics(gop_framebuffer_info* info) {
@@ -76,7 +98,6 @@ void fill_screen(float red, float green, float blue) {
 
 void print_char(uint32_t ch) {
 	FT_UInt glyph_index = FT_Get_Char_Index(ft_face, ch);
-
 	FT_Error ft_error = FT_Load_Glyph(ft_face, glyph_index, FT_LOAD_DEFAULT);
 	if(ft_error) {
 		kernel_panic();
@@ -99,7 +120,15 @@ void print_char(uint32_t ch) {
 				.blue = val,
 				._reserved = 0
 			};
-			fb[(uint64_t)y*fb_info.width + x] = col;
+			uint32_t y_val = next_y+y-ft_face->glyph->bitmap_top;
+			uint32_t x_val = next_x+x+ft_face->glyph->bitmap_left;
+			fb[y_val*fb_info.width + x_val] = col;
 		}
+	}
+
+	next_x += adv_x;
+	if(next_x + adv_x > fb_info.hres) {
+		next_y += adv_y;
+		next_x = 0;
 	}
 }
