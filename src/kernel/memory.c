@@ -8,7 +8,7 @@
 #include <string.h>
 
 
-extern void invalidate_tlbs_for(void* vaddr);
+extern void invalidate_tlbs_for(volatile void* vaddr);
 void map_page(void* vaddr, void* paddr, uint64_t flags);
 
 
@@ -84,10 +84,10 @@ static int free_phys_pages(void* base_addr, uint64_t count) {
 }
 
 
-#define PML4E_ADDR_OF(VADDR) ((uint64_t*)(0xFFFFFFFFFFFFF000 | ((uintptr_t)(VADDR)&0xFF8000000000) >> 36))
-#define PDPTE_ADDR_OF(VADDR) ((uint64_t*)(0xFFFFFFFFFFE00000 | ((uintptr_t)(VADDR)&0xFFFFC0000000) >> 27))
-#define PDE_ADDR_OF(VADDR)   ((uint64_t*)(0xFFFFFFFFC0000000 | ((uintptr_t)(VADDR)&0xFFFFFFE00000) >> 18))
-#define PTE_ADDR_OF(VADDR)   ((uint64_t*)(0xFFFFFF8000000000 | ((uintptr_t)(VADDR)&0xFFFFFFFFF000) >>  9))
+#define PML4E_ADDR_OF(VADDR) ((volatile uint64_t*)(0xFFFFFFFFFFFFF000 | ((uintptr_t)(VADDR)&0xFF8000000000) >> 36))
+#define PDPTE_ADDR_OF(VADDR) ((volatile uint64_t*)(0xFFFFFFFFFFE00000 | ((uintptr_t)(VADDR)&0xFFFFC0000000) >> 27))
+#define PDE_ADDR_OF(VADDR)   ((volatile uint64_t*)(0xFFFFFFFFC0000000 | ((uintptr_t)(VADDR)&0xFFFFFFE00000) >> 18))
+#define PTE_ADDR_OF(VADDR)   ((volatile uint64_t*)(0xFFFFFF8000000000 | ((uintptr_t)(VADDR)&0xFFFFFFFFF000) >>  9))
 
 #define PHYS_ADDR_OF(VADDR) ((void*)((*PTE_ADDR_OF((VADDR)) & 0xFFFFFFFFF000) + ((uintptr_t)(VADDR) & 0xFFF)))
 
