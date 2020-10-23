@@ -10,8 +10,10 @@ kernel_gdtr:
 kernel_gdt_jmp_target:
 .quad kernel_gdt_loaded
 .short 0x08
+
+.section .bss
 stack_bottom:
-.fill 0x100000, 1, 0
+.skip 0x100000
 stack_top:
 
 
