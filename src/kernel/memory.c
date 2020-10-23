@@ -89,6 +89,8 @@ static int free_phys_pages(void* base_addr, uint64_t count) {
 #define PDE_ADDR_OF(VADDR)   ((uint64_t*)(0xFFFFFFFFC0000000 | ((uintptr_t)(VADDR)&0xFFFFFFE00000) >> 18))
 #define PTE_ADDR_OF(VADDR)   ((uint64_t*)(0xFFFFFF8000000000 | ((uintptr_t)(VADDR)&0xFFFFFFFFF000) >>  9))
 
+#define PHYS_ADDR_OF(VADDR) ((void*)((*PTE_ADDR_OF((VADDR)) & 0xFFFFFFFFF000) + ((uintptr_t)(VADDR) & 0xFFF)))
+
 // TODO: make address calculation for zeroing structures more readable and/or performant
 void map_page(void* vaddr, void* paddr, uint64_t flags) {
 	if (*PML4E_ADDR_OF(vaddr) & PAGING_FLAG_PRESENT) {
@@ -421,7 +423,7 @@ void kfree(void* ptr) {
 			entry->size = new_end - (uintptr_t)entry - sizeof(heap_entry);
 		}
 		uint64_t page_count = ((uintptr_t)kernel_heap_end - new_end)/0x1000;
-		free_phys_pages((void*)new_end, page_count);
+		free_phys_pages(PHYS_ADDR_OF(new_end), page_count);
 		kernel_heap_end = (max_align_t*)new_end;
 	}
 }
