@@ -3,8 +3,12 @@
 #include "common/paging.h"
 #include "kernel/fonts.h"
 #include "kernel/kernel.h"
+#include <string.h>
 #include <ft2build.h>
 #include FT_FREETYPE_H
+
+
+#define GLYPH_CACHE_SIZE 10
 
 
 typedef struct {
@@ -13,6 +17,11 @@ typedef struct {
 	uint8_t red;
 	uint8_t _reserved;
 } pixel_bgrx8u;
+
+typedef struct {
+	uint32_t ch;
+	pixel_bgrx8u bitmap[];
+} glyph_cache_entry;
 
 
 static gop_framebuffer_info fb_info;
@@ -30,6 +39,9 @@ static uint32_t next_x = 0;
 static uint32_t next_y = 0;
 
 static uint32_t font_height;
+
+static void* glyph_cache;
+static size_t glyph_cache_entry_size;
 
 
 static pixel_bgrx8u col_lerp(pixel_bgrx8u a, pixel_bgrx8u b, float t) {
@@ -74,6 +86,11 @@ static void init_freetype(int font_size) {
 	adv_y = ft_face->glyph->linearVertAdvance/65535.0;
 
 	font_height = font_size;
+
+	glyph_cache_entry_size = sizeof(glyph_cache_entry) + adv_x*adv_y*sizeof(pixel_bgrx8u);
+	// reserve one more entry than needed to serve as temporary buffer
+	glyph_cache = kmalloc((GLYPH_CACHE_SIZE+1)*glyph_cache_entry_size);
+	memset(glyph_cache, 0, GLYPH_CACHE_SIZE*glyph_cache_entry_size);
 }
 
 void init_graphics(gop_framebuffer_info* info) {
@@ -116,7 +133,12 @@ void fill_screen(float red, float green, float blue) {
 	}
 }
 
-void print_char(uint32_t ch) {
+static void load_glyph(uint32_t ch) {
+	memmove((void*)((uintptr_t)glyph_cache + glyph_cache_entry_size), glyph_cache, (GLYPH_CACHE_SIZE-1)*glyph_cache_entry_size);
+	glyph_cache_entry* gc_entry = (glyph_cache_entry*)glyph_cache;
+	memset(gc_entry, 0, glyph_cache_entry_size);
+	gc_entry->ch = ch;
+
 	FT_UInt glyph_index = FT_Get_Char_Index(ft_face, ch);
 	FT_Error ft_error = FT_Load_Glyph(ft_face, glyph_index, FT_LOAD_DEFAULT);
 	if(ft_error) {
@@ -130,14 +152,40 @@ void print_char(uint32_t ch) {
 
 	FT_Bitmap* ft_bm = &ft_face->glyph->bitmap;
 
-	pixel_bgrx8u* fb = (pixel_bgrx8u*)fb_info.addr;
 	for(uint32_t y = 0; y < ft_bm->rows; y++) {
 		for(uint32_t x = 0; x < ft_bm->width; x++) {
 			pixel_bgrx8u col = bg_fg_lerp[ft_bm->buffer[y*ft_bm->pitch + x]];
-			uint32_t y_val = next_y+font_height+y-ft_face->glyph->bitmap_top;
-			uint32_t x_val = next_x+x+ft_face->glyph->bitmap_left;
-			fb[y_val*fb_info.width + x_val] = col;
+			uint32_t y_val = font_height+y-ft_face->glyph->bitmap_top;
+			uint32_t x_val = x+ft_face->glyph->bitmap_left;
+			gc_entry->bitmap[y_val*adv_x + x_val] = col;
 		}
+	}
+}
+
+void print_char(uint32_t ch) {
+	int gc_index = 0;
+	for(; gc_index < GLYPH_CACHE_SIZE; gc_index++) {
+		glyph_cache_entry* gc_entry = (glyph_cache_entry*)((uintptr_t)glyph_cache + glyph_cache_entry_size*gc_index);
+		if(gc_entry->ch == ch) {
+			break;
+		}
+	}
+	if (gc_index == 0) {
+	} else if(gc_index == GLYPH_CACHE_SIZE) {
+		load_glyph(ch);
+	} else {
+		void* orig_pos = (void*)((uintptr_t)glyph_cache + gc_index*glyph_cache_entry_size);
+		void* tmp_pos = (void*)((uintptr_t)glyph_cache + GLYPH_CACHE_SIZE*glyph_cache_entry_size);
+		memcpy(tmp_pos, orig_pos, glyph_cache_entry_size);
+		memmove((void*)((uintptr_t)glyph_cache + glyph_cache_entry_size), glyph_cache, (GLYPH_CACHE_SIZE-1)*glyph_cache_entry_size);
+		memcpy(glyph_cache, tmp_pos, glyph_cache_entry_size);
+	}
+
+	pixel_bgrx8u* bm = ((glyph_cache_entry*)glyph_cache)->bitmap;
+
+	pixel_bgrx8u* fb = (pixel_bgrx8u*)fb_info.addr;
+	for(uint32_t y = 0; y < adv_y; y++) {
+		memcpy(fb + (next_y + y)*fb_info.width + next_x, bm + y*adv_x, adv_x*sizeof(pixel_bgrx8u));
 	}
 
 	next_x += adv_x;

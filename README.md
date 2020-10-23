@@ -71,4 +71,4 @@ The configurable options are set by environment variables:
   * add support for displaying text/bitmaps
   * add drivers for other graphics output interfaces
 * implement PCI 3.0 compatible PCIe configuration mechanism
-* improve performance of printing characters to screen (use a cache)
+* improve performance of printing characters to screen (maybe improve cache / use FreeType cache)
