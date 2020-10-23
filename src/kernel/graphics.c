@@ -144,5 +144,9 @@ void print_char(uint32_t ch) {
 	if(next_x + adv_x > fb_info.hres) {
 		next_y += adv_y;
 		next_x = 0;
+		if(next_y + adv_y > fb_info.vres) {
+			next_y = 0;
+			fill_screen(bg_col.red, bg_col.green, bg_col.blue);
+		}
 	}
 }
