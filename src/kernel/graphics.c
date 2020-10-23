@@ -26,8 +26,10 @@ static FT_Face ft_face;
 
 static uint32_t adv_x;
 static uint32_t adv_y;
-static uint32_t next_x;
-static uint32_t next_y;
+static uint32_t next_x = 0;
+static uint32_t next_y = 0;
+
+static uint32_t font_height;
 
 
 static pixel_bgrx8u col_lerp(pixel_bgrx8u a, pixel_bgrx8u b, float t) {
@@ -70,8 +72,8 @@ static void init_freetype(int font_size) {
 
 	adv_x = ft_face->glyph->linearHoriAdvance/65535.0;
 	adv_y = ft_face->glyph->linearVertAdvance/65535.0;
-	next_x = 0;
-	next_y = adv_y;
+
+	font_height = font_size;
 }
 
 void init_graphics(gop_framebuffer_info* info) {
@@ -132,7 +134,7 @@ void print_char(uint32_t ch) {
 	for(uint32_t y = 0; y < ft_bm->rows; y++) {
 		for(uint32_t x = 0; x < ft_bm->width; x++) {
 			pixel_bgrx8u col = bg_fg_lerp[ft_bm->buffer[y*ft_bm->pitch + x]];
-			uint32_t y_val = next_y+y-ft_face->glyph->bitmap_top;
+			uint32_t y_val = next_y+font_height+y-ft_face->glyph->bitmap_top;
 			uint32_t x_val = next_x+x+ft_face->glyph->bitmap_left;
 			fb[y_val*fb_info.width + x_val] = col;
 		}
