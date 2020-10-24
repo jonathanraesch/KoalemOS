@@ -18,8 +18,8 @@ SECTIONS {
          }
          .phys_mmap BLOCK(4K) : {
            *(PHYS_MMAP)
-           . = 0x100000;
          }
+         . += 0x1000000;
          .kernel_heap BLOCK(4K) : {
            *(KERNEL_HEAP)
          }
