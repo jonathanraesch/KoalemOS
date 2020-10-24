@@ -68,7 +68,7 @@ The configurable options are set by environment variables:
 ### misc
 * extend graphical capabilities
   * add support for other GOP pixel formats
-  * add support for displaying text/bitmaps
+  * add support for displaying bitmaps
   * add drivers for other graphics output interfaces
 * implement PCI 3.0 compatible PCIe configuration mechanism
 * improve performance of printing characters to screen (maybe improve cache / use FreeType cache)
