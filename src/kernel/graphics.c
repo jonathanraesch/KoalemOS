@@ -4,6 +4,7 @@
 #include "kernel/fonts.h"
 #include "kernel/kernel.h"
 #include <string.h>
+#include <ctype.h>
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
@@ -37,6 +38,9 @@ static uint32_t adv_x;
 static uint32_t adv_y;
 static uint32_t next_x = 0;
 static uint32_t next_y = 0;
+
+static const int tab_size = 4;
+static const int ff_size = 1;
 
 static uint32_t font_height;
 
@@ -162,7 +166,44 @@ static void load_glyph(uint32_t ch) {
 	}
 }
 
+static inline void check_charpos() {
+	if(next_x + adv_x > fb_info.hres) {
+		next_y += adv_y;
+		next_x = 0;
+		if(next_y + adv_y > fb_info.vres) {
+			next_y = 0;
+			fill_screen(bg_col.red, bg_col.green, bg_col.blue);
+		}
+	}
+}
+
 void print_char(uint32_t ch) {
+	if(isspace(ch)) {
+		switch(ch) {
+			case '\n':
+				next_y += adv_y;
+				next_x = 0;
+			case '\r':
+				next_x = 0;
+				break;
+			case '\f':
+				next_y += adv_y*ff_size;
+				break;
+			case '\t':
+				next_x += adv_x*tab_size;
+				break;
+			case '\v':
+				next_y += adv_y;
+				break;
+			case ' ':
+			default:
+				next_x += adv_x;
+				break;
+		}
+		check_charpos();
+		return;
+	}
+
 	int gc_index = 0;
 	for(; gc_index < GLYPH_CACHE_SIZE; gc_index++) {
 		glyph_cache_entry* gc_entry = (glyph_cache_entry*)((uintptr_t)glyph_cache + glyph_cache_entry_size*gc_index);
@@ -189,12 +230,5 @@ void print_char(uint32_t ch) {
 	}
 
 	next_x += adv_x;
-	if(next_x + adv_x > fb_info.hres) {
-		next_y += adv_y;
-		next_x = 0;
-		if(next_y + adv_y > fb_info.vres) {
-			next_y = 0;
-			fill_screen(bg_col.red, bg_col.green, bg_col.blue);
-		}
-	}
+	check_charpos();
 }
