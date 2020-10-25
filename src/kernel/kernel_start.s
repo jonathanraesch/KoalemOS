@@ -12,9 +12,8 @@ kernel_gdt_jmp_target:
 .short 0x08
 
 .section .bss
-stack_bottom:
 .skip 0x100000
-stack_top:
+stack_bottom:
 
 
 .global _kernel_start
@@ -25,7 +24,7 @@ _kernel_start:
 	cli
 
 	# load initial stack:
-	lea rsp, stack_top[rip]
+	lea rsp, stack_bottom[rip]
 	mov rbp, rsp
 	push rdx	#	efi_mmap_data	[rbp-8]
 	push rcx	#	fb_info			[rbp-16]
