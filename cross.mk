@@ -6,7 +6,7 @@ CXX := $(CROSSDIR)/bin/x86_64-elf-c++
 LD := $(CROSSDIR)/bin/x86_64-elf-ld
 
 
-ASFLAGS := -msyntax=intel
+ASFLAGS := -msyntax=intel -mnaked-reg
 CFLAGS := -ffreestanding -nostdlib -mno-red-zone -fno-asynchronous-unwind-tables
 
 LIBGCCDIR := $(dir $(shell $(CC) $(CFLAGS) -print-libgcc-file-name))

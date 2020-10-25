@@ -17,5 +17,5 @@ kernel_heap_start:
 
 .global invalidate_tlbs_for
 invalidate_tlbs_for:
-	invlpg [%rdi]
+	invlpg [rdi]
 	ret

@@ -3,16 +3,16 @@
 
 .global get_cs
 get_cs:
-	mov %rax, %cs
+	mov rax, cs
 	ret
 
 .global load_idt
 load_idt:
 	nop
 	enter 10, 0
-	mov [%rbp-8], %rdi
-	mov [%rbp-10], %si
-	lidt [%rbp-10]
+	mov [rbp-8], rdi
+	mov [rbp-10], si
+	lidt [rbp-10]
 	leave
 	ret
 

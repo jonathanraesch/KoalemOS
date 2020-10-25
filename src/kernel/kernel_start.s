@@ -25,36 +25,36 @@ _kernel_start:
 	cli
 
 	# load initial stack:
-	lea %rsp, stack_top[%rip]
-	mov %rbp, %rsp
-	push %rdx	#	efi_mmap_data	[%rbp-8]
-	push %rcx	#	fb_info			[%rbp-16]
-	push %r8	#	acpi_x_r_sdt	[%rbp-24]
+	lea rsp, stack_top[rip]
+	mov rbp, rsp
+	push rdx	#	efi_mmap_data	[rbp-8]
+	push rcx	#	fb_info			[rbp-16]
+	push r8		#	acpi_x_r_sdt	[rbp-24]
 
 	# load gdt
-	lea %rax, kernel_gdt_jmp_target[%rip]
-	lea %rbx, kernel_gdtr[%rip]
-	lgdt [%rbx]
+	lea rax, kernel_gdt_jmp_target[rip]
+	lea rbx, kernel_gdtr[rip]
+	lgdt [rbx]
 	# load CS
-	rex.w ljmp [%rax]
+	rex.w ljmp [rax]
 kernel_gdt_loaded:
-	mov %ax, 16
-	mov %ss, %ax
-	mov %ds, %ax
-	mov %es, %ax
-	mov %fs, %ax
-	mov %gs, %ax
+	mov ax, 16
+	mov ss, ax
+	mov ds, ax
+	mov es, ax
+	mov fs, ax
+	mov gs, ax
 
 	call setup_idt
 	sti
 
-	mov %rdi, [%rbp-8]
+	mov rdi, [rbp-8]
 	call init_memory_management
 
 	call kernel_post_init_check
 
-	mov %rdi, [%rbp-16]
-	mov %rsi, [%rbp-24]
+	mov rdi, [rbp-16]
+	mov rsi, [rbp-24]
 	call kmain
 
 kloop:
