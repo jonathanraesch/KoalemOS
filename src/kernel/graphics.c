@@ -21,6 +21,7 @@ typedef struct {
 
 typedef struct {
 	uint32_t ch;
+	int priority;
 	pixel_bgrx8u bitmap[];
 } glyph_cache_entry;
 
@@ -92,8 +93,7 @@ static void init_freetype(int font_size) {
 	font_height = font_size;
 
 	glyph_cache_entry_size = sizeof(glyph_cache_entry) + adv_x*adv_y*sizeof(pixel_bgrx8u);
-	// reserve one more entry than needed to serve as temporary buffer
-	glyph_cache = kmalloc((GLYPH_CACHE_SIZE+1)*glyph_cache_entry_size);
+	glyph_cache = kmalloc(GLYPH_CACHE_SIZE*glyph_cache_entry_size);
 	memset(glyph_cache, 0, GLYPH_CACHE_SIZE*glyph_cache_entry_size);
 }
 
@@ -137,11 +137,44 @@ void fill_screen(float red, float green, float blue) {
 	}
 }
 
-static void load_glyph(uint32_t ch) {
-	memmove((void*)((uintptr_t)glyph_cache + glyph_cache_entry_size), glyph_cache, (GLYPH_CACHE_SIZE-1)*glyph_cache_entry_size);
-	glyph_cache_entry* gc_entry = (glyph_cache_entry*)glyph_cache;
-	memset(gc_entry, 0, glyph_cache_entry_size);
+static pixel_bgrx8u* get_glyph(uint32_t ch) {
+
+	static uint64_t cur_priority = 0;
+	cur_priority++;
+	// rollover would take many years of continuous operation to occur
+	// checking for it anyway...
+	if(cur_priority == 0) {
+		cur_priority = 1;
+		for(int i = 0; i < GLYPH_CACHE_SIZE; i++) {
+			glyph_cache_entry* gc_entry = (glyph_cache_entry*)((uintptr_t)glyph_cache + glyph_cache_entry_size*i);
+			gc_entry->priority = 0;
+		}
+	}
+
+	int gc_index;
+	int priority = cur_priority;
+	for(int i = 0; i < GLYPH_CACHE_SIZE; i++) {
+		glyph_cache_entry* gc_entry = (glyph_cache_entry*)((uintptr_t)glyph_cache + glyph_cache_entry_size*i);
+
+		if(gc_entry->ch == ch) {
+			gc_entry->priority = cur_priority;
+			return gc_entry->bitmap;
+		}
+		if(gc_entry->priority < priority) {
+			gc_index = i;
+			priority = gc_entry->priority;
+		}
+	}
+
+	glyph_cache_entry* gc_entry = (glyph_cache_entry*)((uintptr_t)glyph_cache + glyph_cache_entry_size*gc_index);
+	gc_entry->priority = cur_priority;
 	gc_entry->ch = ch;
+	for(uint32_t y = 0; y < adv_y; y++) {
+		for(uint32_t x = 0; x < adv_x; x++) {
+			gc_entry->bitmap[y*adv_x + x] = bg_col;
+		}
+	}
+
 
 	FT_UInt glyph_index = FT_Get_Char_Index(ft_face, ch);
 	FT_Error ft_error = FT_Load_Glyph(ft_face, glyph_index, FT_LOAD_DEFAULT);
@@ -155,7 +188,6 @@ static void load_glyph(uint32_t ch) {
 	}
 
 	FT_Bitmap* ft_bm = &ft_face->glyph->bitmap;
-
 	for(uint32_t y = 0; y < ft_bm->rows; y++) {
 		for(uint32_t x = 0; x < ft_bm->width; x++) {
 			pixel_bgrx8u col = bg_fg_lerp[ft_bm->buffer[y*ft_bm->pitch + x]];
@@ -164,6 +196,8 @@ static void load_glyph(uint32_t ch) {
 			gc_entry->bitmap[y_val*adv_x + x_val] = col;
 		}
 	}
+
+	return gc_entry->bitmap;
 }
 
 static inline void check_charpos() {
@@ -204,25 +238,7 @@ void print_char(uint32_t ch) {
 		return;
 	}
 
-	int gc_index = 0;
-	for(; gc_index < GLYPH_CACHE_SIZE; gc_index++) {
-		glyph_cache_entry* gc_entry = (glyph_cache_entry*)((uintptr_t)glyph_cache + glyph_cache_entry_size*gc_index);
-		if(gc_entry->ch == ch) {
-			break;
-		}
-	}
-	if (gc_index == 0) {
-	} else if(gc_index == GLYPH_CACHE_SIZE) {
-		load_glyph(ch);
-	} else {
-		void* orig_pos = (void*)((uintptr_t)glyph_cache + gc_index*glyph_cache_entry_size);
-		void* tmp_pos = (void*)((uintptr_t)glyph_cache + GLYPH_CACHE_SIZE*glyph_cache_entry_size);
-		memcpy(tmp_pos, orig_pos, glyph_cache_entry_size);
-		memmove((void*)((uintptr_t)glyph_cache + glyph_cache_entry_size), glyph_cache, (GLYPH_CACHE_SIZE-1)*glyph_cache_entry_size);
-		memcpy(glyph_cache, tmp_pos, glyph_cache_entry_size);
-	}
-
-	pixel_bgrx8u* bm = ((glyph_cache_entry*)glyph_cache)->bitmap;
+	pixel_bgrx8u* bm = get_glyph(ch);
 
 	pixel_bgrx8u* fb = (pixel_bgrx8u*)fb_info.addr;
 	for(uint32_t y = 0; y < adv_y; y++) {
