@@ -59,6 +59,7 @@ The configurable options are set by environment variables:
   * is mapping the first page of ACPI tables is always sufficient to read header information?
   * possibly unmap tables, when not needed
 * maybe allocate phys_mmap dynamically
+* add proper handling/removal of page sizes other than 4K
 
 ### libc
 * check for optimizations of str- and mem- functions in string.h

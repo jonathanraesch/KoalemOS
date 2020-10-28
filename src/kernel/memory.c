@@ -50,6 +50,10 @@ typedef struct _heap_entry {
 } heap_entry;
 
 
+#define ALIGN_DOWN(ADDR, ALIGN) ((uintptr_t)(ADDR)&~((uintptr_t)(ALIGN)-1u))
+#define ALIGN_UP(ADDR, ALIGN) (ALIGN_DOWN((uintptr_t)(ADDR)-1, (uintptr_t)(ALIGN))+(uintptr_t)(ALIGN))
+
+
 #define PHYS_MMAP_INIT_MAX_RANGE_COUNT (0x1000 / sizeof(memory_range))
 _Static_assert (!((PHYS_MMAP_INIT_MAX_RANGE_COUNT * sizeof(memory_range)) & 0xfff), "physcial memory map not page-aligned");
 extern memory_range _phys_mmap_range_buf[];
@@ -186,6 +190,35 @@ void unmap_page(void* vaddr) {
 	invalidate_tlbs_for(vaddr);
 }
 
+static void unmap_page_fix_size(void* vaddr) {
+	if(*PDPTE_ADDR_OF(vaddr) & PAGING_FLAG_PAGE_SIZE) {
+		uint64_t flags = *PDPTE_ADDR_OF(vaddr) & 0x3E;
+		uintptr_t page_addr = *PDPTE_ADDR_OF(vaddr) & 0xFFFFFFFFF000;
+		uint64_t pml4e_val = *PML4E_ADDR_OF(vaddr);
+		*PML4E_ADDR_OF(vaddr) |= PAGING_FLAG_READ_WRITE;
+		*PDPTE_ADDR_OF(vaddr) = 0;
+		*PML4E_ADDR_OF(vaddr) = pml4e_val;
+		for(uintptr_t offset = 0; offset < 0x40000000; offset += 0x1000) {
+			map_page((void*)(ALIGN_DOWN(vaddr, 0x40000000)+offset), (void*)page_addr, flags);
+		}
+	} else if(*PDE_ADDR_OF(vaddr) & PAGING_FLAG_PAGE_SIZE) {
+		uint64_t flags = *PDE_ADDR_OF(vaddr) & 0x3E;
+		uintptr_t page_addr = *PDE_ADDR_OF(vaddr) & 0xFFFFFFFFF000;
+		uint64_t pml4e_val = *PML4E_ADDR_OF(vaddr);
+		*PML4E_ADDR_OF(vaddr) |= PAGING_FLAG_READ_WRITE;
+		uint64_t pdpte_val = *PDPTE_ADDR_OF(vaddr);
+		*PDPTE_ADDR_OF(vaddr) |= PAGING_FLAG_READ_WRITE;
+		*PDE_ADDR_OF(vaddr) = 0;
+		*PDPTE_ADDR_OF(vaddr) = pdpte_val;
+		*PML4E_ADDR_OF(vaddr) = pml4e_val;
+		for(uintptr_t offset = 0; offset < 0x200000; offset += 0x1000) {
+			map_page((void*)(ALIGN_DOWN(vaddr, 0x200000)+offset), (void*)page_addr, flags);
+		}
+	}
+
+	unmap_page(vaddr);
+}
+
 
 static void init_mmap(efi_mmap_data* mmap_data) {
 	void* const efi_mmap_start = mmap_data->descriptors;
@@ -220,7 +253,7 @@ static void init_mmap(efi_mmap_data* mmap_data) {
 				for(uint64_t i = 0; i < cur_desc.NumberOfPages; i++) {
 					void* addr = (void*)(cur_desc.PhysicalStart + i*0x1000);
 					if(addr < PAGE_BASE(efi_mmap_start) || addr > PAGE_BASE(efi_mmap_end)) {
-						unmap_page(addr);
+						unmap_page_fix_size(addr);
 					}
 				}
 				break;
@@ -230,7 +263,7 @@ static void init_mmap(efi_mmap_data* mmap_data) {
 	}
 
 	for(uintptr_t page_base = (uintptr_t)PAGE_BASE(efi_mmap_start); page_base<=(uintptr_t)efi_mmap_end; page_base+=0x1000) {
-		unmap_page((void*)page_base);
+		unmap_page_fix_size((void*)page_base);
 	}
 }
 
@@ -249,9 +282,6 @@ void init_memory_management(efi_mmap_data* mmap_data) {
 	init_heap();
 }
 
-
-#define ALIGN_DOWN(ADDR, ALIGN) ((uintptr_t)(ADDR)&~((uintptr_t)(ALIGN)-1u))
-#define ALIGN_UP(ADDR, ALIGN) (ALIGN_DOWN((uintptr_t)(ADDR)-1, (uintptr_t)(ALIGN))+(uintptr_t)(ALIGN))
 
 void* kmalloc(size_t size) {
 	size = ALIGN_UP(size, alignof(max_align_t));
