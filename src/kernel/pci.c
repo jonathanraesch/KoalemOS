@@ -17,7 +17,7 @@ static pci_config_base_addr* group_config_addrs;
 static uint32_t group_count;
 
 
-#define PCIE_CONF_ADDR(SEG_GROUP, BUS, DEV, FUN, OFFSET) ((void*)(group_config_addrs[SEG_GROUP].base_addr + ((BUS)<<20) + ((DEV)<<15) + ((FUN)<<12) + OFFSET))
+#define PCIE_CONF_ADDR(SEG_GROUP, BUS, DEV, FUN, OFFSET) ((void*)(group_config_addrs[SEG_GROUP].base_addr + (((BUS)-group_config_addrs[SEG_GROUP].start_bus_num)<<20) + ((DEV)<<15) + ((FUN)<<12) + OFFSET))
 
 
 void init_pci() {
