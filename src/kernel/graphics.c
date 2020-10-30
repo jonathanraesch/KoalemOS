@@ -9,7 +9,7 @@
 #include FT_FREETYPE_H
 
 
-#define GLYPH_CACHE_SIZE 10
+#define GLYPH_CACHE_SIZE 100
 
 
 typedef struct {
