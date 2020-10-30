@@ -73,3 +73,14 @@ The configurable options are set by environment variables:
   * add drivers for other graphics output interfaces
 * implement PCI 3.0 compatible PCIe configuration mechanism
 * improve performance of printing characters to screen (maybe improve cache / use FreeType cache)
+
+
+## Known Bugs
+
+* FT_Render_Glyph seems to crash with small font sizes (~11) after rendering a number of unique glyphs
+  * stack corruption somewhere in `gray_render_conic` (`$LIBFTDIR/src/smooth/ftgrays.c`)
+    * likely caused by `x` field of `control` and/or `to` (very large, negative values -> possible underflow)
+    * a stack overflow has been mostly ruled out (methodological errors notwithstanding)
+  * may be a FreeType bug (this is quite unlikely)
+  * earlier during debugging it did not crash but return the error code `1` (`Cannot_Open_Resource`)
+    * the cause of this inconsistent behavior is unknown, possibly accidental changes or simply an unstable system state
