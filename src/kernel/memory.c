@@ -300,7 +300,7 @@ void* kmalloc(size_t size) {
 		uint64_t page_count = (size + sizeof(heap_entry)) / 0x1000 + 1;
 		void* paddr = alloc_phys_pages(page_count);
 		if(!paddr) {
-			kernel_panic();
+			return 0;
 		}
 		for(uint64_t i = 0; i < page_count; i++) {
 			map_page((void*)((uintptr_t)kernel_heap_end+i*0x1000), (void*)((uintptr_t)paddr+i*0x1000), PAGING_FLAG_READ_WRITE);
