@@ -310,6 +310,8 @@ void* kmalloc(size_t size) {
 			.size = 0x1000*page_count - sizeof(heap_entry),
 			.last = last_heap_entry, .next = 0,
 		};
+		last_heap_entry->next = entry;
+		last_heap_entry = entry;
 		kernel_heap_end += (page_count*0x1000)/sizeof(max_align_t);
 	}
 	entry->used = true;
@@ -451,6 +453,7 @@ void kfree(void* ptr) {
 		uintptr_t new_end = ALIGN_UP(entry, 0x1000);
 		if(entry == (void*)new_end) {
 			last_heap_entry = entry->last;
+			last_heap_entry->next = 0;
 		} else {
 			entry->size = new_end - (uintptr_t)entry - sizeof(heap_entry);
 		}
