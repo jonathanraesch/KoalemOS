@@ -459,6 +459,9 @@ void kfree(void* ptr) {
 		}
 		uint64_t page_count = ((uintptr_t)kernel_heap_end - new_end)/0x1000;
 		free_phys_pages(PHYS_ADDR_OF(new_end), page_count);
+		for(uintptr_t page_base = (uintptr_t)kernel_heap_end; page_base < new_end; page_base++) {
+			unmap_page((void*)page_base);
+		}
 		kernel_heap_end = (max_align_t*)new_end;
 	}
 }
