@@ -151,7 +151,7 @@ static pixel_bgrx8u* get_glyph(uint32_t ch) {
 		}
 	}
 
-	int gc_index;
+	int gc_index = 0;	// should always be assigned in loop, initializing here avoids a compiler warning and acts as a failsafe
 	int priority = cur_priority;
 	for(int i = 0; i < GLYPH_CACHE_SIZE; i++) {
 		glyph_cache_entry* gc_entry = (glyph_cache_entry*)((uintptr_t)glyph_cache + glyph_cache_entry_size*i);
