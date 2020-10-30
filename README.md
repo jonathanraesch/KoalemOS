@@ -77,7 +77,11 @@ The configurable options are set by environment variables:
 
 ## Known Bugs
 
-* FT_Render_Glyph seems to crash with small font sizes (~11) after rendering a number of unique glyphs
+* FT_Render_Glyph sometimes crashes
+  * seems to happen after rendering a number of unique glyphs
+    * exact number seems to vary
+    * may just be pure chance
+  * small font sizes (~11) seem to significantly increase the chance of crashing
   * stack corruption somewhere in `gray_render_conic` (`$LIBFTDIR/src/smooth/ftgrays.c`)
     * likely caused by `x` field of `control` and/or `to` (very large, negative values -> possible underflow)
     * a stack overflow has been mostly ruled out (methodological errors notwithstanding)
