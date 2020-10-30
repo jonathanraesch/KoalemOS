@@ -97,7 +97,7 @@ static void init_freetype(int font_size) {
 	memset(glyph_cache, 0, GLYPH_CACHE_SIZE*glyph_cache_entry_size);
 }
 
-void init_graphics(gop_framebuffer_info* info) {
+void init_graphics(gop_framebuffer_info* info, int font_size) {
 	if(PAGE_BASE(info) != PAGE_BASE(info+1)) {
 		map_page(PAGE_BASE(info), PAGE_BASE(info), 0);
 		map_page(PAGE_BASE(info+1), PAGE_BASE(info+1), 0);
@@ -118,7 +118,7 @@ void init_graphics(gop_framebuffer_info* info) {
 		bg_fg_lerp[i] = col_lerp(bg_col, fg_col, i/255.0);
 	}
 
-	init_freetype(32);
+	init_freetype(font_size);
 }
 
 
