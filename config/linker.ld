@@ -3,18 +3,18 @@ ENTRY(_kernel_start)
 SECTIONS {
 	/* kernel is located at 255TiB (virtual/linear address) */
 	. = 0xFFFFFF0000000000;
-	.text BLOCK(4K) : {
+	.text : {
 		*(.text)
 	}
-	.rodata BLOCK(4K) : {
+	.rodata : {
 		*(.rodata)
 		*(.rodata.cst4)
 		*(.rodata.cst8)
 	}
-	.data BLOCK(4K) : {
+	.data : {
 		*(.data)
 	}
-	.bss BLOCK(4K) : {
+	.bss : {
 		*(.bss)
 		*(COMMON)
 	}
