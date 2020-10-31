@@ -8,7 +8,7 @@ kernel_gdt:
 .quad 0x209A0000000000
 # GDT[2]: data segment descriptor
 .quad 0x920000000000
-# GDT[3]: data segment descriptor
+# GDT[3]: TSS descriptor
 .fill 16, 1, 0
 kernel_gdt_end:
 kernel_gdtr:
