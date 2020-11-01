@@ -85,6 +85,12 @@ kernel_gdt_loaded:
 	mov rdi, [rbp-8]
 	call init_memory_management
 
+	call tls_create
+	test rax, rax
+	jnz tls_create_success
+	call kernel_panic
+tls_create_success:
+
 	call kernel_post_init_check
 
 	mov rdi, [rbp-16]

@@ -18,6 +18,15 @@ SECTIONS {
 		*(.bss)
 		*(COMMON)
 	}
+	tls_image = .;
+	.tdata : {
+		*(.tdata)
+	}
+	.tbss : {
+		*(.tbss)
+	}
+	__tls_image_end = .;
+	__tls_image_size_sym = SIZEOF(.tdata) + SIZEOF(.tbss);
 	.phys_mmap BLOCK(4K) : {
 		*(PHYS_MMAP)
 	}
