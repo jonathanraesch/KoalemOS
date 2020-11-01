@@ -7,5 +7,5 @@
 
 #define EINVAL	22
 
-extern int __errno;
+extern _Thread_local int __errno;
 #define errno __errno

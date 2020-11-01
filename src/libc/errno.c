@@ -3,6 +3,6 @@
 
 #ifdef __klibc__
 
-int __errno = 0;
+_Thread_local int __errno = 0;
 
 #endif
