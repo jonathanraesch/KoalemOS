@@ -17,6 +17,9 @@ EFI_STATUS add_page_mapping(uint64_t *pml4, void* vaddr, void* paddr, EFI_BOOT_S
 		if (status != EFI_SUCCESS) {
 			return status;
 		}
+		for(int i = 0; i < 512; i++) {
+			((uint64_t*)addr)[i] = 0;
+		}
 		pml4[PML4_INDEX_OF(vaddr)] = addr | PAGING_FLAG_PRESENT | PAGING_FLAG_READ_WRITE;
 	}
 	pml4[PML4_INDEX_OF(vaddr)] |= PAGING_FLAG_READ_WRITE;
@@ -28,6 +31,9 @@ EFI_STATUS add_page_mapping(uint64_t *pml4, void* vaddr, void* paddr, EFI_BOOT_S
 		if (status != EFI_SUCCESS) {
 			return status;
 		}
+		for(int i = 0; i < 512; i++) {
+			((uint64_t*)addr)[i] = 0;
+		}
 		pdpt[PDPT_INDEX_OF(vaddr)] = addr | PAGING_FLAG_PRESENT | PAGING_FLAG_READ_WRITE;
 	}
 	pdpt[PDPT_INDEX_OF(vaddr)] |= PAGING_FLAG_READ_WRITE;
@@ -38,6 +44,9 @@ EFI_STATUS add_page_mapping(uint64_t *pml4, void* vaddr, void* paddr, EFI_BOOT_S
 		status = uefi_call_wrapper(bs->AllocatePages, 4, AllocateAnyPages, EFI_MEM_TYPE_KERNEL, 1, &addr);
 		if (status != EFI_SUCCESS) {
 			return status;
+		}
+		for(int i = 0; i < 512; i++) {
+			((uint64_t*)addr)[i] = 0;
 		}
 		pd[PD_INDEX_OF(vaddr)] = addr | PAGING_FLAG_PRESENT | PAGING_FLAG_READ_WRITE;
 	}
