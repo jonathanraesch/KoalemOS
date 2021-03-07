@@ -105,6 +105,7 @@ efi_main (EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table) {
 	uintptr_t pheaders_start = kernel_elf_addr + kernel_elf_header->phoff;
 	size_t pheader_size = kernel_elf_header->phentsize;
 	uint16_t pheader_count = kernel_elf_header->phnum;
+	uintptr_t last_allocated_page = 0;
 	for(int i = 0; i < pheader_count; i++) {
 		elf64_program_header* ph = (elf64_program_header*)(pheaders_start + pheader_size*i);
 		if(ph->type == PT_LOAD) {
@@ -116,10 +117,14 @@ efi_main (EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table) {
 			}
 			uintptr_t start_page = ph->vaddr&0xFFFFFFFFFFFFF000;
 			for(UINTN offset = 0; offset < pages*0x1000; offset += 0x1000) {
+				if(start_page + offset <= last_allocated_page) {
+					continue;
+				}
 				status = add_page_mapping(pml4, (void*)(start_page + offset), (void*)(addr + offset), bs);
 				if(status != EFI_SUCCESS) {
 					return status;
 				}
+				last_allocated_page = start_page + offset;
 			}
 			uintptr_t vaddr_offset = ph->vaddr-start_page;
 			for(uintptr_t offset = 0; offset < ph->filesz; offset++) {
