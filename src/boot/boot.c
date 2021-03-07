@@ -108,7 +108,7 @@ efi_main (EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table) {
 	for(int i = 0; i < pheader_count; i++) {
 		elf64_program_header* ph = (elf64_program_header*)(pheaders_start + pheader_size*i);
 		if(ph->type == PT_LOAD) {
-			UINTN pages = ph->memsz/4096 + 1;
+			UINTN pages = ph->memsz/4096 + 2;
 			EFI_PHYSICAL_ADDRESS addr;
 			status = uefi_call_wrapper(bs->AllocatePages, 4, AllocateAnyPages, EFI_MEM_TYPE_KERNEL, pages, &addr);
 			if (status != EFI_SUCCESS) {
