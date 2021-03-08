@@ -32,27 +32,13 @@ static idt_gate_descr idt[IDT_ENTRY_COUNT];
 
 void setup_idt() {
 	uint16_t cs = get_cs();
-	idt[0] = IDT_INT_GATE(isr_not_implemented, cs, 0);	// DE
-	idt[1] = IDT_INT_GATE(isr_do_nothing, cs, 0);		// DB
-	idt[2] = IDT_INT_GATE(isr_not_implemented, cs, 0);	// NMI
-	idt[3] = IDT_INT_GATE(isr_do_nothing, cs, 0);		// BP
-	idt[4] = IDT_INT_GATE(isr_not_implemented, cs, 0);	// OF
-	idt[5] = IDT_INT_GATE(isr_not_implemented, cs, 0);	// BR
-	idt[6] = IDT_INT_GATE(isr_not_implemented, cs, 0);	// UD
-	idt[7] = IDT_INT_GATE(isr_not_implemented, cs, 0);	// NM
-	idt[8] = IDT_INT_GATE(isr_not_implemented, cs, 0);	// DF
-	idt[9] = IDT_INT_GATE(isr_not_implemented, cs, 0);	// coprocessor segment overrun
-	idt[10] = IDT_INT_GATE(isr_not_implemented, cs, 0);	// TS
-	idt[11] = IDT_INT_GATE(isr_not_implemented, cs, 0);	// NP
-	idt[12] = IDT_INT_GATE(isr_not_implemented, cs, 0);	// SS
-	idt[13] = IDT_INT_GATE(isr_not_implemented, cs, 0);	// GP
-	idt[14] = IDT_INT_GATE(isr_not_implemented, cs, 0);	// PF
+	for(int i = 0; i < IDT_ENTRY_COUNT; i++) {
+		idt[i] = IDT_INT_GATE(isr_not_implemented, cs, 0);
+	}
 	idt[15] = (idt_gate_descr){.low=0, .high=0};	// interrupt 15
-	idt[16] = IDT_INT_GATE(isr_not_implemented, cs, 0);	// MF
-	idt[17] = IDT_INT_GATE(isr_not_implemented, cs, 0);	// AC
-	idt[18] = IDT_INT_GATE(isr_not_implemented, cs, 0);	// MC
-	idt[19] = IDT_INT_GATE(isr_not_implemented, cs, 0);	// XM
-	idt[20] = IDT_INT_GATE(isr_not_implemented, cs, 0);	// VE
-	idt[21] = IDT_INT_GATE(isr_not_implemented, cs, 0);	// CP
+
+	idt[1] = IDT_INT_GATE(isr_do_nothing, cs, 0);	// DB
+	idt[3] = IDT_INT_GATE(isr_do_nothing, cs, 0);	// BP
+
 	load_idt(idt, IDT_ENTRY_COUNT*8-1);
 }
