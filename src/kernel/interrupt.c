@@ -40,5 +40,5 @@ void setup_idt() {
 	idt[1] = IDT_INT_GATE(isr_do_nothing, cs, 0);	// DB
 	idt[3] = IDT_INT_GATE(isr_do_nothing, cs, 0);	// BP
 
-	load_idt(idt, IDT_ENTRY_COUNT*8-1);
+	load_idt(idt, IDT_ENTRY_COUNT*sizeof(idt_gate_descr)-1);
 }
