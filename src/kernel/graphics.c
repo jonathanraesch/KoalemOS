@@ -248,3 +248,10 @@ void print_char(uint32_t ch) {
 	next_x += adv_x;
 	check_charpos();
 }
+
+
+void print_str(uint32_t* str) {
+	while(*str) {
+		print_char(*str++);
+	}
+}
