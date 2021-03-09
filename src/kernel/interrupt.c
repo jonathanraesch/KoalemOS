@@ -27,14 +27,17 @@ typedef struct {
 	IDT_GATE_IST(IST)|IDT_GATE_SEG_SEL(CS)|IDT_GATE_OFFSET_LO((OFFSET)), .high=IDT_GATE_OFFSET_HI((OFFSET))})
 
 
-#define IDT_ENTRY_COUNT 22
+#define IDT_ENTRY_COUNT 256
 static idt_gate_descr idt[IDT_ENTRY_COUNT];
 
 
 void setup_idt() {
 	uint16_t cs = get_cs();
-	for(int i = 0; i < IDT_ENTRY_COUNT; i++) {
+	for(int i = 0; i < 22; i++) {
 		idt[i] = IDT_INT_GATE(isr_not_implemented, cs, 0, 0);
+	}
+	for(int i = 22; i < IDT_ENTRY_COUNT; i++) {
+		idt[i] = (idt_gate_descr){.low=0, .high=0};
 	}
 	idt[15] = (idt_gate_descr){.low=0, .high=0};	// interrupt 15
 
