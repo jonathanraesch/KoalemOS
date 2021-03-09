@@ -6,6 +6,7 @@ extern uint16_t get_cs();
 extern void load_idt(void* base, uint16_t limit);
 extern void isr_not_implemented();
 extern void isr_do_nothing();
+extern void isr_timer();
 
 
 #define IDT_GATE_PRESENT_FLAG 0x800000000000
@@ -43,6 +44,8 @@ void setup_idt() {
 
 	idt[1] = IDT_INT_GATE(isr_do_nothing, cs, 0, 0);	// DB
 	idt[3] = IDT_INT_GATE(isr_do_nothing, cs, 0, 0);	// BP
+
+	idt[INT_APIC_TIMER] = IDT_INT_GATE(isr_timer, cs, 0, 1);
 
 	load_idt(idt, IDT_ENTRY_COUNT*sizeof(idt_gate_descr)-1);
 }
