@@ -13,12 +13,34 @@ typedef struct {
 	uint32_t reserved;
 } pci_config_base_addr;
 
+typedef struct {
+	uint16_t vendor_id;
+	uint16_t device_id;
+	uint16_t command;
+	uint16_t status;
+	uint8_t revision_id;
+	uint8_t class_interface;
+	uint8_t class_sub;
+	uint8_t class_base;
+	uint8_t cache_line_size;
+	uint8_t master_latency_timer;
+	uint8_t type;
+	uint8_t bist;
+	uint8_t __type_specific_01[36];
+	uint8_t capabilities_ptr;
+	uint8_t __type_specific_02[7];
+	uint8_t interrupt_line;
+	uint8_t interrupt_pin;
+	uint8_t __type_specific_03[2];
+} pci_config_header;
+
+
 static pci_config_base_addr* group_config_addrs;
 static uint32_t group_count;
 
-pci_config_header** pci_devices;
+static pci_config_header** pci_devices;
 static size_t device_capacity;
-size_t pci_device_count;
+static size_t pci_device_count;
 
 
 #define PCIE_CONF_ADDR(SEG_GROUP, BUS, DEV, FUN, OFFSET) ((void*)(group_config_addrs[SEG_GROUP].base_addr + (((BUS)-group_config_addrs[SEG_GROUP].start_bus_num)<<20) + ((DEV)<<15) + ((FUN)<<12) + OFFSET))
