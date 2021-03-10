@@ -16,14 +16,70 @@ typedef struct {
 static pci_config_base_addr* group_config_addrs;
 static uint32_t group_count;
 
+pci_config_header** devices;
+static size_t device_capacity;
+size_t device_count;
+
 
 #define PCIE_CONF_ADDR(SEG_GROUP, BUS, DEV, FUN, OFFSET) ((void*)(group_config_addrs[SEG_GROUP].base_addr + (((BUS)-group_config_addrs[SEG_GROUP].start_bus_num)<<20) + ((DEV)<<15) + ((FUN)<<12) + OFFSET))
 
 
-void init_pci() {
+static bool find_devices() {
+	devices = kmalloc(2*sizeof(pci_config_header*));
+	if(!devices) {
+		return false;
+	}
+	device_capacity = 2;
+	device_count = 0;
+
+	for(int group = 0; group < group_count; group++) {
+		for(int bus = group_config_addrs[group].start_bus_num; bus < group_config_addrs[group].end_bus_num; bus++) {
+			for(int dev = 0; dev < 32; dev++) {
+				pci_config_header* header = (pci_config_header*)PCIE_CONF_ADDR(group, bus, dev, 0, 0);
+				if(header->vendor_id == 0xFFFF) {
+					continue;
+				}
+				if(device_count == device_capacity) {
+					void* new_devs = krealloc(devices, 2*device_capacity*sizeof(pci_config_header*));
+					if(!new_devs) {
+						kfree(devices);
+						return false;
+					} else {
+						devices = new_devs;
+						device_capacity *= 2;
+					}
+				}
+				devices[device_count++] = header;
+				if(header->type & (1u << 7)) {
+					for(int fun = 1; fun < 8; fun++) {
+						header = (pci_config_header*)PCIE_CONF_ADDR(group, bus, dev, fun, 0);
+						if(header->vendor_id == 0xFFFF) {
+							continue;
+						}
+						if(device_count == device_capacity) {
+							void* new_devs = krealloc(devices, 2*device_capacity*sizeof(pci_config_header*));
+							if(!new_devs) {
+								kfree(devices);
+								return false;
+							} else {
+								devices = new_devs;
+								device_capacity *= 2;
+							}
+						}
+						devices[device_count++] = header;
+					}
+				}
+			}
+		}
+	}
+	return true;
+}
+
+
+bool init_pci() {
 	acpi_sdt mcfg;
 	if(!get_acpi_table(ACPI_SIGNATURE_MCFG, &mcfg)) {
-		kernel_panic();
+		return false;
 	}
 	group_config_addrs = (pci_config_base_addr*)((uintptr_t)mcfg.addr + 8);
 	group_count = (mcfg.length - 8)/16;
@@ -35,6 +91,7 @@ void init_pci() {
 			map_page((void*)cur_page, (void*)cur_page, PAGING_FLAG_PAGE_LEVEL_CACHE_DISABLE);
 		}
 	}
+	return find_devices();
 }
 
 
