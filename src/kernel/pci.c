@@ -16,21 +16,21 @@ typedef struct {
 static pci_config_base_addr* group_config_addrs;
 static uint32_t group_count;
 
-pci_config_header** devices;
+pci_config_header** pci_devices;
 static size_t device_capacity;
-size_t device_count;
+size_t pci_device_count;
 
 
 #define PCIE_CONF_ADDR(SEG_GROUP, BUS, DEV, FUN, OFFSET) ((void*)(group_config_addrs[SEG_GROUP].base_addr + (((BUS)-group_config_addrs[SEG_GROUP].start_bus_num)<<20) + ((DEV)<<15) + ((FUN)<<12) + OFFSET))
 
 
 static bool find_devices() {
-	devices = kmalloc(2*sizeof(pci_config_header*));
-	if(!devices) {
+	pci_devices = kmalloc(2*sizeof(pci_config_header*));
+	if(!pci_devices) {
 		return false;
 	}
 	device_capacity = 2;
-	device_count = 0;
+	pci_device_count = 0;
 
 	for(int group = 0; group < group_count; group++) {
 		for(int bus = group_config_addrs[group].start_bus_num; bus < group_config_addrs[group].end_bus_num; bus++) {
@@ -39,34 +39,34 @@ static bool find_devices() {
 				if(header->vendor_id == 0xFFFF) {
 					continue;
 				}
-				if(device_count == device_capacity) {
-					void* new_devs = krealloc(devices, 2*device_capacity*sizeof(pci_config_header*));
+				if(pci_device_count == device_capacity) {
+					void* new_devs = krealloc(pci_devices, 2*device_capacity*sizeof(pci_config_header*));
 					if(!new_devs) {
-						kfree(devices);
+						kfree(pci_devices);
 						return false;
 					} else {
-						devices = new_devs;
+						pci_devices = new_devs;
 						device_capacity *= 2;
 					}
 				}
-				devices[device_count++] = header;
+				pci_devices[pci_device_count++] = header;
 				if(header->type & (1u << 7)) {
 					for(int fun = 1; fun < 8; fun++) {
 						header = (pci_config_header*)PCIE_CONF_ADDR(group, bus, dev, fun, 0);
 						if(header->vendor_id == 0xFFFF) {
 							continue;
 						}
-						if(device_count == device_capacity) {
-							void* new_devs = krealloc(devices, 2*device_capacity*sizeof(pci_config_header*));
+						if(pci_device_count == device_capacity) {
+							void* new_devs = krealloc(pci_devices, 2*device_capacity*sizeof(pci_config_header*));
 							if(!new_devs) {
-								kfree(devices);
+								kfree(pci_devices);
 								return false;
 							} else {
-								devices = new_devs;
+								pci_devices = new_devs;
 								device_capacity *= 2;
 							}
 						}
-						devices[device_count++] = header;
+						pci_devices[pci_device_count++] = header;
 					}
 				}
 			}
@@ -95,21 +95,21 @@ bool init_pci() {
 }
 
 
-uint16_t pcie_read16(uint16_t seg_group, uint8_t bus, uint8_t device, uint8_t function, uint16_t offset) {
+uint16_t pci_config_read16(uint16_t seg_group, uint8_t bus, uint8_t device, uint8_t function, uint16_t offset) {
 	void* addr = PCIE_CONF_ADDR(seg_group, bus, device, function, offset);
 	return *(uint16_t*)addr;
 }
 
-uint32_t pcie_read32(uint16_t seg_group, uint8_t bus, uint8_t device, uint8_t function, uint16_t offset) {
+uint32_t pci_config_read32(uint16_t seg_group, uint8_t bus, uint8_t device, uint8_t function, uint16_t offset) {
 	void* addr = PCIE_CONF_ADDR(seg_group, bus, device, function, offset);
 	return *(uint32_t*)addr;
 }
 
 
-void pcie_write16(uint16_t seg_group, uint8_t bus, uint8_t device, uint8_t function, uint16_t offset, uint16_t val) {
+void pci_config_write16(uint16_t seg_group, uint8_t bus, uint8_t device, uint8_t function, uint16_t offset, uint16_t val) {
 	*(uint16_t*)PCIE_CONF_ADDR(seg_group, bus, device, function, offset) = val;
 }
 
-void pcie_write32(uint16_t seg_group, uint8_t bus, uint8_t device, uint8_t function, uint16_t offset, uint32_t val) {
+void pci_config_write32(uint16_t seg_group, uint8_t bus, uint8_t device, uint8_t function, uint16_t offset, uint32_t val) {
 	*(uint32_t*)PCIE_CONF_ADDR(seg_group, bus, device, function, offset) = val;
 }
