@@ -117,6 +117,11 @@ bool init_pci() {
 }
 
 
+uint8_t pci_config_read8(pci_function_addr fun_addr, uint16_t offset) {
+	void* addr = PCIE_CONF_ADDR(fun_addr.segment_group, fun_addr.bus, fun_addr.device, fun_addr.function, offset);
+	return *(uint8_t*)addr;
+}
+
 uint16_t pci_config_read16(pci_function_addr fun_addr, uint16_t offset) {
 	void* addr = PCIE_CONF_ADDR(fun_addr.segment_group, fun_addr.bus, fun_addr.device, fun_addr.function, offset);
 	return *(uint16_t*)addr;
@@ -127,6 +132,15 @@ uint32_t pci_config_read32(pci_function_addr fun_addr, uint16_t offset) {
 	return *(uint32_t*)addr;
 }
 
+uint64_t pci_config_read64(pci_function_addr fun_addr, uint16_t offset) {
+	void* addr = PCIE_CONF_ADDR(fun_addr.segment_group, fun_addr.bus, fun_addr.device, fun_addr.function, offset);
+	return *(uint64_t*)addr;
+}
+
+
+void pci_config_write8(pci_function_addr fun_addr, uint16_t offset, uint8_t val) {
+	*(uint8_t*)PCIE_CONF_ADDR(fun_addr.segment_group, fun_addr.bus, fun_addr.device, fun_addr.function, offset) = val;
+}
 
 void pci_config_write16(pci_function_addr fun_addr, uint16_t offset, uint16_t val) {
 	*(uint16_t*)PCIE_CONF_ADDR(fun_addr.segment_group, fun_addr.bus, fun_addr.device, fun_addr.function, offset) = val;
@@ -134,4 +148,8 @@ void pci_config_write16(pci_function_addr fun_addr, uint16_t offset, uint16_t va
 
 void pci_config_write32(pci_function_addr fun_addr, uint16_t offset, uint32_t val) {
 	*(uint32_t*)PCIE_CONF_ADDR(fun_addr.segment_group, fun_addr.bus, fun_addr.device, fun_addr.function, offset) = val;
+}
+
+void pci_config_write64(pci_function_addr fun_addr, uint16_t offset, uint64_t val) {
+	*(uint64_t*)PCIE_CONF_ADDR(fun_addr.segment_group, fun_addr.bus, fun_addr.device, fun_addr.function, offset) = val;
 }
