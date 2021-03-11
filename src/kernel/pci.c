@@ -71,6 +71,7 @@ typedef struct {
 typedef struct {
 	void* addr;
 	size_t size;
+	bool is_prefetchable;
 	bool is_io_space;
 } pci_bar_desc;
 
@@ -117,7 +118,7 @@ static pci_dev_desc make_dev_desc(pci_config_header* header) {
 	pci_dev_desc ret;
 	ret.conf = header;
 	for(int i = 0; i < 6; i++) {
-		ret.bars[i] = (pci_bar_desc){0,0,0};
+		ret.bars[i] = (pci_bar_desc){0,0,0,0};
 	}
 
 	size_t bars_sz;
@@ -142,6 +143,8 @@ static pci_dev_desc make_dev_desc(pci_config_header* header) {
 		}
 		if(*bar & 1) {
 			ret.bars[offset].is_io_space = true;
+		} else if (*bar & 0x8) {
+			ret.bars[offset].is_prefetchable = true;
 		}
 		if((*bar & 0x7) == 0x4) {
 			ret.bars[offset].size = bar_size(bar, true);
