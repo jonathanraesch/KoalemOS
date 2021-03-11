@@ -59,11 +59,14 @@ _Static_assert (!((PHYS_MMAP_INIT_MAX_RANGE_COUNT * sizeof(memory_range)) & 0xff
 extern memory_range _phys_mmap_range_buf[];
 static memory_map phys_mmap = {.memory_ranges=_phys_mmap_range_buf, .range_count=0, .max_range_count=PHYS_MMAP_INIT_MAX_RANGE_COUNT};
 
+#define KERNEL_HEAP_MAX_SIZE 0x10000000000
 #define KERNEL_HEAP_INIT_SIZE 0x1000
 extern max_align_t kernel_heap_start[];
 static max_align_t* kernel_heap_end = kernel_heap_start + KERNEL_HEAP_INIT_SIZE;
 static heap_entry* first_heap_entry;
 static heap_entry* last_heap_entry;
+
+static memory_map virt_mmap;
 
 
 static void* alloc_phys_pages(uint64_t pages) {
@@ -75,7 +78,7 @@ static void* alloc_phys_pages(uint64_t pages) {
 }
 
 // TODO: if feasible, resize memory map after merge
-static int free_phys_pages(void* base_addr, uint64_t count) {
+static bool free_phys_pages(void* base_addr, uint64_t count) {
 	if(mmap_add_range_merge(&phys_mmap, base_addr, count)) {
 		return true;
 	}
@@ -85,6 +88,40 @@ static int free_phys_pages(void* base_addr, uint64_t count) {
 		return true;
 	}
 	return false;
+}
+
+
+static void virt_mmap_reduce() {
+	if(virt_mmap.range_count*2 < virt_mmap.max_range_count) {
+		void* new_ranges = krealloc(virt_mmap.memory_ranges, (virt_mmap.max_range_count/2)*sizeof(memory_range));
+		if(new_ranges) {
+			virt_mmap.memory_ranges = new_ranges;
+			virt_mmap.max_range_count = virt_mmap.max_range_count/2;
+		}
+	}
+}
+
+void* alloc_virt_pages(uint64_t pages) {
+	void* base_addr = mmap_get_pages(&virt_mmap, pages);
+	if(base_addr) {
+		virt_mmap_reduce();
+		return base_addr;
+	}
+	return false;
+}
+
+int free_virt_pages(void* base_addr, uint64_t count) {
+	if(mmap_add_range_merge(&virt_mmap, base_addr, count)) {
+		virt_mmap_reduce();
+		return true;
+	}
+	void* new_ranges = krealloc(virt_mmap.memory_ranges, virt_mmap.range_count*2*sizeof(memory_range));
+	if(!new_ranges) {
+		return false;
+	}
+	virt_mmap.memory_ranges = new_ranges;
+	virt_mmap.max_range_count = virt_mmap.range_count*2;
+	return free_virt_pages(base_addr, count);
 }
 
 
@@ -279,9 +316,18 @@ static void init_heap() {
 	first_heap_entry = last_heap_entry;
 }
 
+static void init_virt_mmap() {
+	memory_range* v_ranges = kmalloc(sizeof(memory_range));
+	uint64_t end = 0u-0x8000000000u;
+	uint64_t start = (uint64_t)kernel_heap_start + KERNEL_HEAP_MAX_SIZE;
+	v_ranges[0] = (memory_range){.base_addr=(void*)start, .pages=(end-start)/0x1000};
+	virt_mmap = (memory_map){.memory_ranges=v_ranges, .range_count=1, .max_range_count=1};
+}
+
 void init_memory_management(efi_mmap_data* mmap_data) {
 	init_mmap(mmap_data);
 	init_heap();
+	init_virt_mmap();
 }
 
 

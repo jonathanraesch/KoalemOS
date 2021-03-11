@@ -44,6 +44,7 @@ The configurable options are set by environment variables:
 * specify dependencies between parts of kernel (e.g. init_acpi needing to be called before init_pci)
   * could likely be solved by implementing kernel modules
 * check ACPI table checksums
+* check kernel heap limit in kmalloc/krealloc
 
 ### memory
 * set up dynamic kernel stack
