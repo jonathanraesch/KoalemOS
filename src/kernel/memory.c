@@ -59,7 +59,7 @@ _Static_assert (!((PHYS_MMAP_INIT_MAX_RANGE_COUNT * sizeof(memory_range)) & 0xff
 extern memory_range _phys_mmap_range_buf[];
 static memory_map phys_mmap = {.memory_ranges=_phys_mmap_range_buf, .range_count=0, .max_range_count=PHYS_MMAP_INIT_MAX_RANGE_COUNT};
 
-#define KERNEL_HEAP_MAX_SIZE 0x10000000000
+#define KERNEL_HEAP_MAX_SIZE 0x4000000000
 #define KERNEL_HEAP_INIT_SIZE 0x1000
 extern max_align_t kernel_heap_start[];
 static max_align_t* kernel_heap_end = kernel_heap_start + KERNEL_HEAP_INIT_SIZE;
