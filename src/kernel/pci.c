@@ -68,6 +68,14 @@ typedef struct {
 	uint8_t max_latency;
 } pci_config0_header;
 
+
+typedef struct {
+	void* paddr;
+	void* vaddr;
+	uint8_t start_bus_num;
+	uint8_t end_bus_num;
+} pci_segment_group_desc;
+
 typedef struct {
 	void* addr;
 	size_t size;
@@ -81,7 +89,7 @@ typedef struct {
 } pci_dev_desc;
 
 
-static pci_config_base_addr* group_config_addrs;
+static pci_segment_group_desc* groups;
 static uint32_t group_count;
 
 static pci_dev_desc* pci_devices;
@@ -89,7 +97,7 @@ static size_t device_capacity;
 static size_t pci_device_count;
 
 
-#define PCIE_CONF_ADDR(SEG_GROUP, BUS, DEV, FUN, OFFSET) ((void*)(group_config_addrs[SEG_GROUP].base_addr + (((BUS)-group_config_addrs[SEG_GROUP].start_bus_num)<<20) + ((DEV)<<15) + ((FUN)<<12) + OFFSET))
+#define PCIE_CONF_ADDR(SEG_GROUP, BUS, DEV, FUN, OFFSET) ((void*)((uint64_t)groups[SEG_GROUP].vaddr + (((BUS)-groups[SEG_GROUP].start_bus_num)<<20) + ((DEV)<<15) + ((FUN)<<12) + OFFSET))
 
 
 static size_t bar_size(volatile uint32_t* bar, bool is_64bit) {
@@ -170,7 +178,7 @@ static bool find_devices() {
 	pci_device_count = 0;
 
 	for(int group = 0; group < group_count; group++) {
-		for(int bus = group_config_addrs[group].start_bus_num; bus < group_config_addrs[group].end_bus_num; bus++) {
+		for(int bus = groups[group].start_bus_num; bus < groups[group].end_bus_num; bus++) {
 			for(int dev = 0; dev < 32; dev++) {
 				pci_config_header* header = (pci_config_header*)PCIE_CONF_ADDR(group, bus, dev, 0, 0);
 				if(header->vendor_id == 0xFFFF) {
@@ -218,14 +226,29 @@ bool init_pci() {
 	if(!get_acpi_table(ACPI_SIGNATURE_MCFG, &mcfg)) {
 		return false;
 	}
-	group_config_addrs = (pci_config_base_addr*)((uintptr_t)mcfg.addr + 8);
+	pci_config_base_addr* base_addrs = (pci_config_base_addr*)((uintptr_t)mcfg.addr + 8);
 	group_count = (mcfg.length - 8)/16;
 
+	groups = kmalloc(group_count*sizeof(pci_segment_group_desc));
+	if(!groups) {
+		return false;
+	}
+
 	for(uint16_t group = 0; group < group_count; group++) {
-		uint8_t bus_count = group_config_addrs[group].end_bus_num - group_config_addrs[group].start_bus_num;
-		uintptr_t conf_addrs_end = group_config_addrs[group].base_addr + bus_count*0x100000;
-		for(uintptr_t cur_page = group_config_addrs[group].base_addr; cur_page < conf_addrs_end; cur_page+=0x1000) {
-			map_page((void*)cur_page, (void*)cur_page, PAGING_FLAG_PAGE_LEVEL_CACHE_DISABLE | PAGING_FLAG_READ_WRITE);
+		groups[group] = (pci_segment_group_desc){
+			.paddr=(void*)base_addrs[group].base_addr,
+			.start_bus_num=base_addrs[group].start_bus_num,
+			.end_bus_num=base_addrs[group].end_bus_num
+		};
+
+		uint64_t page_count = (groups[group].end_bus_num - groups[group].start_bus_num)*0x100;
+		groups[group].vaddr = alloc_virt_pages(page_count);
+		if(!groups[group].vaddr) {
+			return false;	// TODO: free already allocated pages and mappings
+		}
+
+		for(uintptr_t offset = 0; offset < page_count*0x1000; offset+=0x1000) {
+			map_page((void*)((uintptr_t)groups[group].vaddr+offset), (void*)((uintptr_t)groups[group].paddr+offset), PAGING_FLAG_PAGE_LEVEL_CACHE_DISABLE | PAGING_FLAG_READ_WRITE);
 		}
 	}
 	return find_devices();
