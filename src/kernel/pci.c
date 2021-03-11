@@ -110,7 +110,7 @@ bool init_pci() {
 		uint8_t bus_count = group_config_addrs[group].end_bus_num - group_config_addrs[group].start_bus_num;
 		uintptr_t conf_addrs_end = group_config_addrs[group].base_addr + bus_count*0x100000;
 		for(uintptr_t cur_page = group_config_addrs[group].base_addr; cur_page < conf_addrs_end; cur_page+=0x1000) {
-			map_page((void*)cur_page, (void*)cur_page, PAGING_FLAG_PAGE_LEVEL_CACHE_DISABLE);
+			map_page((void*)cur_page, (void*)cur_page, PAGING_FLAG_PAGE_LEVEL_CACHE_DISABLE | PAGING_FLAG_READ_WRITE);
 		}
 	}
 	return find_devices();
