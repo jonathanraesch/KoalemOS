@@ -61,6 +61,11 @@ The configurable options are set by environment variables:
 * maybe allocate phys_mmap dynamically
 * add proper handling/removal of page sizes other than 4K
 
+### PCI
+* add support for PCI 3.0 compatible PCIe configuration mechanism
+* possibly add support for PCI-CardBus bridges
+* possibly add support for deprecated <1MB PCI BAR encoding (bits[2:1]=1)
+
 ### libc
 * check for optimizations of str- and mem- functions in string.h
 * improve qsort performance (change pivot to median of three, use introsort)
@@ -70,5 +75,4 @@ The configurable options are set by environment variables:
   * add support for other GOP pixel formats
   * add support for displaying bitmaps
   * add drivers for other graphics output interfaces
-* implement PCI 3.0 compatible PCIe configuration mechanism
 * improve performance of printing characters to screen (maybe improve cache / use FreeType cache)
