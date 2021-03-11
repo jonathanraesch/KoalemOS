@@ -107,7 +107,7 @@ void* alloc_virt_pages(uint64_t pages) {
 		virt_mmap_reduce();
 		return base_addr;
 	}
-	return false;
+	return 0;
 }
 
 int free_virt_pages(void* base_addr, uint64_t count) {
