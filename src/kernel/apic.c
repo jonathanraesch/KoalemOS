@@ -55,20 +55,22 @@
 
 
 extern void* __apic_enable();
+extern void isr_timer();
 
 void* __apic_reg_eoi;
 void (*__apic_timer_callback)();
 
 
 static void* apic_base;
+static uint8_t timer_int;
 
 
 void start_apic_timer(uint32_t count, uint8_t div_pow, bool periodic, void (*callback)()) {
 	__apic_timer_callback = callback;
 	if(periodic) {
-		APIC_REG(APIC_OFFS_LVT_TIMER) = INT_APIC_TIMER | (1u << 17);
+		APIC_REG(APIC_OFFS_LVT_TIMER) = timer_int | (1u << 17);
 	} else {
-		APIC_REG(APIC_OFFS_LVT_TIMER) = INT_APIC_TIMER;
+		APIC_REG(APIC_OFFS_LVT_TIMER) = timer_int;
 	}
 
 	div_pow -= 1u;
@@ -86,5 +88,7 @@ void init_apic() {
 	apic_base = __apic_enable();
 	__apic_reg_eoi = (void*)((uintptr_t)apic_base + APIC_OFFS_EOI);
 	APIC_REG(APIC_OFFS_ERROR_STATUS) = 0;
+
+	timer_int = alloc_interrupt_vector(isr_timer);
 }
 
