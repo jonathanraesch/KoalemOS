@@ -47,6 +47,7 @@ _kernel_start:
 	push rdx	#	efi_mmap_data	[rbp-8]
 	push rcx	#	fb_info			[rbp-16]
 	push r8		#	acpi_x_r_sdt	[rbp-24]
+	push r9		#	tsc_freq_hz		[rbp-32]
 
 	# initialize TSS descriptor
 	lea rbx, kernel_gdt+24[rip]

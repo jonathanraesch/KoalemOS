@@ -78,3 +78,5 @@ The configurable options are set by environment variables:
   * add support for displaying bitmaps
   * add drivers for other graphics output interfaces
 * improve performance of printing characters to screen (maybe improve cache / use FreeType cache)
+* implement methods of timing CPU clocks using CPUID and/or MSRs (see Intel SDM Vol3 Ch10.5.4, Ch18.7.3)
+  * these methods should work, but are currently not testable

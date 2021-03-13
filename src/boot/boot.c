@@ -22,6 +22,9 @@ typedef struct __attribute__((__packed__)) {
 } acpi_rsdp;
 
 
+uint64_t read_tsc();
+
+
 EFI_STATUS
 efi_main (EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table) {
 	InitializeLib(image_handle, system_table);
@@ -42,6 +45,16 @@ efi_main (EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table) {
 	if (status != EFI_SUCCESS) {
 		return status;
 	}
+
+
+	const uint64_t timer_us = 10000;
+	uint64_t a = read_tsc();
+	status = uefi_call_wrapper(bs->Stall, 1, timer_us);
+	if (status != EFI_SUCCESS) {
+		return status;
+	}
+	uint64_t b = read_tsc();
+	uint64_t tsc_freq_hz = (b - a) * 1000000 / timer_us;
 
 
 	// read kernel binary from disk
@@ -239,5 +252,5 @@ efi_main (EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table) {
 
 
 	efi_mmap_data mmap_data = {.descriptors = mmap, .mmap_size=mmap_buf_size, .descriptor_size=descr_size};
-	boot_end((void*)pml4, (void*)kernel_elf_header->entry, &mmap_data, &fb_info, acpi_x_r_sdt);
+	boot_end((void*)pml4, (void*)kernel_elf_header->entry, &mmap_data, &fb_info, acpi_x_r_sdt, tsc_freq_hz);
 }
