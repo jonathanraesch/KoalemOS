@@ -62,6 +62,7 @@ The configurable options are set by environment variables:
   * possibly unmap tables, when not needed
 * maybe allocate phys_mmap dynamically
 * add proper handling/removal of page sizes other than 4K
+* free AP bootstrap memory after use
 
 ### PCI
 * add support for PCI 3.0 compatible PCIe configuration mechanism

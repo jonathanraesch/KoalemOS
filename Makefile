@@ -11,11 +11,13 @@ KERNELLIBDIR := $(LIBDIR)/kernel
 USERLIBDIR := $(LIBDIR)/user
 UEFISRCDIR := $(SRCDIR)/boot
 KERNELSRCDIR := $(SRCDIR)/kernel
+APBOOTSRCDIR := $(SRCDIR)/ap_boot
 LIBCSRCDIR := $(SRCDIR)/libc
 
 CROSSMAKEFILE := cross.mk
 FREETYPEMAKEFILE := freetype.mk
 KERNELMAKEFILE := $(KERNELSRCDIR)/Makefile
+APBOOTMAKEFILE := $(APBOOTSRCDIR)/Makefile
 UEFIMAKEFILE := $(UEFISRCDIR)/Makefile
 LIBCMAKEFILE := $(LIBCSRCDIR)/Makefile
 
@@ -28,6 +30,7 @@ SRCTYPES := .s .c
 -include $(CROSSMAKEFILE)
 -include $(LIBCMAKEFILE)
 -include $(FREETYPEMAKEFILE)
+-include $(APBOOTMAKEFILE)
 -include $(KERNELMAKEFILE)
 -include $(UEFIMAKEFILE)
 
@@ -40,10 +43,10 @@ SRCTYPES := .s .c
 all: $(UEFIIMAGE) $(LIBC) $(KLIBC)
 
 run: $(UEFIIMAGE)
-	qemu-system-x86_64 -bios OVMF.fd -net none -drive file=$<,format=raw -M q35
+	qemu-system-x86_64 -bios OVMF.fd -smp 4 -net none -drive file=$<,format=raw -M q35
 
 run-debug: $(UEFIIMAGE)
-	qemu-system-x86_64 -s -bios OVMF.fd -net none -drive file=$<,format=raw -M q35
+	qemu-system-x86_64 -s -bios OVMF.fd -smp 4 -net none -drive file=$<,format=raw -M q35
 
 $(UEFIIMAGE): $(UEFIBINARY) $(KERNELBINARY)
 	dd if=/dev/zero of=$@ bs=1k count=$(UEFIIMGSIZE)

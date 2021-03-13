@@ -1,4 +1,5 @@
 #pragma once
+#include "common/paging.h"
 #include <stdint.h>
 #include <stddef.h>
 

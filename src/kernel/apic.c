@@ -51,6 +51,18 @@
 #define APIC_OFFS_DIV_CONF			0x3E0
 
 
+#define APIC_IPI_DELIV_LOWEST		0x100
+#define APIC_IPI_DELIV_SMI			0x200
+#define APIC_IPI_DELIV_NMI			0x400
+#define APIC_IPI_DELIV_INIT			0x500
+#define APIC_IPI_DELIV_SIPI			0x600
+#define APIC_IPI_LEV_ASS			0x4000
+#define APIC_IPI_LEV_DEASS			0
+#define APIC_IPI_DEST_SELF			0x40000
+#define APIC_IPI_DEST_ALL			0x80000
+#define APIC_IPI_DEST_NOTSELF		0xC0000
+
+
 #define APIC_REG(OFFSET) (*(uint32_t*)((uintptr_t)apic_base + (OFFSET)))
 
 
@@ -66,6 +78,7 @@ uint64_t __apic_tsc_end = 0;
 
 static void* apic_base;
 static uint8_t timer_int;
+static uint64_t tsc_freq;
 static double timer_freq;
 
 
@@ -131,6 +144,17 @@ void init_apic(uint64_t tsc_freq_hz) {
 	APIC_REG(APIC_OFFS_ERROR_STATUS) = 0;
 
 	timer_int = alloc_interrupt_vector(__isr_timer);
+	tsc_freq = tsc_freq_hz;
 	set_timer_freq(tsc_freq_hz);
 }
 
+
+void send_init_sipi_sipi(uint8_t vec) {
+	APIC_REG(APIC_OFFS_ICR_LO) = APIC_IPI_DEST_NOTSELF | APIC_IPI_LEV_ASS | APIC_IPI_DELIV_INIT;
+	uint64_t tsc_target = __apic_read_tsc() + tsc_freq/100;
+	while(__apic_read_tsc() < tsc_target) {}
+	APIC_REG(APIC_OFFS_ICR_LO) = APIC_IPI_DEST_NOTSELF | APIC_IPI_LEV_ASS | APIC_IPI_DELIV_SIPI | vec;
+	tsc_target = __apic_read_tsc() + tsc_freq/5000;
+	while(__apic_read_tsc() < tsc_target) {}
+	APIC_REG(APIC_OFFS_ICR_LO) = APIC_IPI_DEST_NOTSELF | APIC_IPI_LEV_ASS | APIC_IPI_DELIV_SIPI | vec;
+}

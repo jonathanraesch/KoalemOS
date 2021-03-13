@@ -3,11 +3,7 @@
 #include "kernel/acpi.h"
 #include "kernel/pci.h"
 #include "kernel/apic.h"
-
-
-void timer_tick() {
-	print_char('T');
-}
+#include "kernel/ap_boot.h"
 
 
 void kmain(gop_framebuffer_info* gop_fb_info, void* acpi_x_r_sdt, uint64_t tsc_freq_hz) {
@@ -19,9 +15,14 @@ void kmain(gop_framebuffer_info* gop_fb_info, void* acpi_x_r_sdt, uint64_t tsc_f
 	}
 	init_apic(tsc_freq_hz);
 
-	start_apic_timer_rt(1.0, true, timer_tick);
+	boot_aps();
 
+	volatile uint8_t* v = (uint8_t*)(ap_boot_image_size-1);
+	uint8_t cpus_counted = 0;
 	while(1) {
-
+		if(*v > cpus_counted) {
+			print_char('C');
+			cpus_counted++;
+		}
 	}
 }

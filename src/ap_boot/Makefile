@@ -1,0 +1,18 @@
+APBOOTASFLAGS := $(ASFLAGS)
+APBOOTLDFLAGS := $(LDFLAGS)
+
+APBOOTBUILDDIR := $(BUILDDIR)/ap_boot
+
+APBOOTOBJS := $(APBOOTBUILDDIR)/boot.s.o
+APBOOTLDSCRIPT := $(CONFDIR)/ap_boot_linker.ld
+APBOOTBINARY := $(APBOOTBUILDDIR)/ap_boot.bin
+
+
+$(APBOOTBINARY): $(APBOOTOBJS) $(APBOOTLDSCRIPT)
+	mkdir -p $(dir $@)
+	$(LD) -n $(APBOOTLDFLAGS) -T $(APBOOTLDSCRIPT) --oformat binary -o $@ $(APBOOTOBJS)
+
+
+$(APBOOTBUILDDIR)/%.s.o: $(APBOOTSRCDIR)/%.s
+	mkdir -p $(dir $@)
+	$(AS) $(APBOOTASFLAGS) -o $@ -c $<

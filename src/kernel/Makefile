@@ -1,6 +1,6 @@
 ENVSUBST := envsubst
 
-KERNELASFLAGS := $(ASFLAGS) -I $(FONTDIR)
+KERNELASFLAGS := $(ASFLAGS) -I $(FONTDIR) -I $(APBOOTBUILDDIR)
 KERNELCFLAGS := $(CFLAGS) -std=c11 -pedantic-errors -Wall -I $(INCLUDEDIR) -I $(LIBCINCLUDEDIR) -I $(LIBFTINCDIR) -mcmodel=large -Og -ggdb
 KERNELLDFLAGS := $(LDFLAGS) -L $(KERNELLIBDIR)
 
@@ -27,7 +27,7 @@ $(OUTCONFDIR)/%: $(CONFDIR)/%
 	mkdir -p $(OUTCONFDIR)
 	$(ENVSUBST) < $^ > $@
 
-$(KERNELBUILDDIR)/%.s.o: $(KERNELSRCDIR)/%.s
+$(KERNELBUILDDIR)/%.s.o: $(KERNELSRCDIR)/%.s $(APBOOTBINARY)
 	mkdir -p $(dir $@)
 	$(AS) $(KERNELASFLAGS) -o $@ -c $<
 

@@ -1,7 +1,7 @@
 #include "kernel/memory.h"
 #include "kernel/kernel.h"
 #include "kernel/mmap.h"
-#include "common/paging.h"
+#include "kernel/ap_boot.h"
 #include "common/mmap.h"
 #include <stdbool.h>
 #include <stdalign.h>
@@ -278,6 +278,16 @@ static void init_mmap(efi_mmap_data* mmap_data) {
 			case EfiBootServicesData:
 			case EfiConventionalMemory:
 			case EfiPersistentMemory:
+				if(ap_boot_paddr_unset && cur_desc.PhysicalStart <= 0xFF000 && ap_boot_image_size <= 0x1000*cur_desc.NumberOfPages) {
+					ap_boot_paddr_unset = false;
+					ap_boot_paddr = (void*)cur_desc.PhysicalStart;
+					size_t pgcnt = ap_boot_image_size % 0x1000 ? ap_boot_image_size/0x1000 + 1 : ap_boot_image_size/0x1000;
+					if(cur_desc.NumberOfPages == pgcnt) {
+						break;
+					}
+					cur_desc.NumberOfPages -= pgcnt;
+					cur_desc.PhysicalStart += 0x1000*pgcnt;
+				}
 				if(cur_desc.PhysicalStart == 0) {
 					if(cur_desc.NumberOfPages < 2u) {
 						break;
@@ -299,6 +309,10 @@ static void init_mmap(efi_mmap_data* mmap_data) {
 		}
 
 		cur_desc_ptr = (void*)((uintptr_t)cur_desc_ptr + efi_mmap_desc_size);
+	}
+
+	if(ap_boot_paddr_unset) {
+		kernel_panic();
 	}
 
 	for(uintptr_t page_base = (uintptr_t)PAGE_BASE(efi_mmap_start); page_base<=(uintptr_t)efi_mmap_end; page_base+=0x1000) {
