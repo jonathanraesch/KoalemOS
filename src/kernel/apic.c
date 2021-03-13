@@ -55,14 +55,18 @@
 
 
 extern void* __apic_enable();
-extern void isr_timer();
+extern void __isr_timer();
+extern void __isr_timer_rdtsc();
+extern uint64_t __apic_read_tsc();
 
 void* __apic_reg_eoi;
 void (*__apic_timer_callback)();
 
+uint64_t __apic_tsc_end = 0;
 
 static void* apic_base;
 static uint8_t timer_int;
+static double timer_freq;
 
 
 void start_apic_timer(uint32_t count, uint8_t div_pow, bool periodic, void (*callback)()) {
@@ -79,16 +83,54 @@ void start_apic_timer(uint32_t count, uint8_t div_pow, bool periodic, void (*cal
 	APIC_REG(APIC_OFFS_INIT_CNT) = count;
 }
 
+void start_apic_timer_rt(double seconds, bool periodic, void (*callback)()) {
+	if(seconds*timer_freq < 0xFFFFFFFF) {
+		start_apic_timer(seconds*timer_freq, 0, periodic, callback);
+	} else if(seconds*timer_freq/2.0 < 0xFFFFFFFF) {
+		start_apic_timer(seconds*timer_freq/2.0, 1, periodic, callback);
+	} else if(seconds*timer_freq/4.0 < 0xFFFFFFFF) {
+		start_apic_timer(seconds*timer_freq/4.0, 2, periodic, callback);
+	} else if(seconds*timer_freq/8.0 < 0xFFFFFFFF) {
+		start_apic_timer(seconds*timer_freq/8.0, 3, periodic, callback);
+	} else if(seconds*timer_freq/16.0 < 0xFFFFFFFF) {
+		start_apic_timer(seconds*timer_freq/16.0, 4, periodic, callback);
+	} else if(seconds*timer_freq/32.0 < 0xFFFFFFFF) {
+		start_apic_timer(seconds*timer_freq/32.0, 5, periodic, callback);
+	} else if(seconds*timer_freq/64.0 < 0xFFFFFFFF) {
+		start_apic_timer(seconds*timer_freq/64.0, 6, periodic, callback);
+	} else {
+		start_apic_timer(seconds*timer_freq/128.0, 7, periodic, callback);
+	}
+}
+
 void stop_apic_timer() {
 	APIC_REG(APIC_OFFS_INIT_CNT) = 0;
 }
 
 
-void init_apic() {
+static void set_timer_freq(uint64_t tsc_freq_hz) {
+	const uint32_t wait_cnt = 100000000;
+
+	uint8_t vec = alloc_interrupt_vector(__isr_timer_rdtsc);
+	APIC_REG(APIC_OFFS_LVT_TIMER) = vec;
+	APIC_REG(APIC_OFFS_DIV_CONF) = 11;
+
+	APIC_REG(APIC_OFFS_INIT_CNT) = wait_cnt;
+	uint64_t tsc_start = __apic_read_tsc();
+	while(!__apic_tsc_end) {}
+
+	free_interrupt_vector(vec);
+	double t_diff = __apic_tsc_end-tsc_start;
+	timer_freq = (double)tsc_freq_hz * (double)wait_cnt / t_diff;
+}
+
+
+void init_apic(uint64_t tsc_freq_hz) {
 	apic_base = __apic_enable();
 	__apic_reg_eoi = (void*)((uintptr_t)apic_base + APIC_OFFS_EOI);
 	APIC_REG(APIC_OFFS_ERROR_STATUS) = 0;
 
-	timer_int = alloc_interrupt_vector(isr_timer);
+	timer_int = alloc_interrupt_vector(__isr_timer);
+	set_timer_freq(tsc_freq_hz);
 }
 

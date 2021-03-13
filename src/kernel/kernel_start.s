@@ -96,6 +96,7 @@ tls_create_success:
 
 	mov rdi, [rbp-16]
 	mov rsi, [rbp-24]
+	mov rdx, [rbp-32]
 	call kmain
 
 kloop:

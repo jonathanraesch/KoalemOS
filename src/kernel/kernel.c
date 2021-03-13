@@ -10,16 +10,16 @@ void timer_tick() {
 }
 
 
-void kmain(gop_framebuffer_info* gop_fb_info, void* acpi_x_r_sdt) {
+void kmain(gop_framebuffer_info* gop_fb_info, void* acpi_x_r_sdt, uint64_t tsc_freq_hz) {
 	init_graphics(gop_fb_info, 20);
 	fill_screen(0.0, 0.0, 0.0);
 	init_acpi(acpi_x_r_sdt);
 	if(!init_pci()) {
 		kernel_panic();
 	}
-	init_apic();
+	init_apic(tsc_freq_hz);
 
-	start_apic_timer(50000000, 7, true, timer_tick);
+	start_apic_timer_rt(1.0, true, timer_tick);
 
 	while(1) {
 
