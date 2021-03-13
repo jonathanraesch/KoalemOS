@@ -36,6 +36,7 @@ uint8_t alloc_interrupt_vector(void isr()) {
 	for(int i = 0; i < IDT_ENTRY_COUNT-32; i++) {
 		if(!int_used[i]) {
 			idt[i+32] = IDT_INT_GATE(isr, get_cs(), 0, 0);
+			int_used[i] = true;
 			return i+32;
 		}
 	}
