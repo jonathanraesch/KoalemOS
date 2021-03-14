@@ -1,19 +1,3 @@
-.section .bss
-
-# interrupt handlers are currently limited to 1kiB of stack space
-.global istack_0_bottom
-.global istack_1_bottom
-.global istack_2_bottom
-
-.skip 1024
-istack_2_bottom:
-
-.skip 1024
-istack_1_bottom:
-
-.skip 1024
-istack_0_bottom:
-
 
 .section .text
 
