@@ -14,7 +14,7 @@ extern void isr_do_nothing();
 #define IDT_GATE_TYPE_INTERRUPT 0xE0000000000
 #define IDT_GATE_TYPE_TRAP 0xF0000000000
 #define IDT_GATE_SEG_SEL(X) ((uint16_t)(X)<<16)
-#define IDT_GATE_IST(X) ((uint64_t)((X)&0x7)<<16)
+#define IDT_GATE_IST(X) ((uint64_t)((X)&0x7)<<32)
 #define IDT_GATE_OFFSET_LO(X) (((uint64_t)(X)&0xFFFF) | ((uint64_t)(X)<<32 & 0xFFFF000000000000))
 #define IDT_GATE_OFFSET_HI(X) ((uint64_t)(X)>>32)
 
