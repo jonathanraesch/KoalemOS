@@ -27,6 +27,8 @@ SECTIONS {
 	}
 	__tls_image_end = .;
 	__tls_image_size_sym = SIZEOF(.tdata) + SIZEOF(.tbss);
+	__bsp_tls_buf = .;
+	. += __tls_image_size_sym;
 	.phys_mmap BLOCK(4K) : {
 		*(PHYS_MMAP)
 	}

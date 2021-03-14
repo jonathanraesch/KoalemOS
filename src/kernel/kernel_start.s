@@ -84,18 +84,13 @@ kernel_gdt_loaded:
 	mov ax, 24
 	ltr ax
 
+	call __tls_create_bsp
+
 	call setup_idt
 	sti
 
 	mov rdi, [rbp-8]
 	call init_memory_management
-
-	call tls_create
-	test rax, rax
-	jnz tls_create_success
-	call kernel_panic
-tls_create_success:
-
 	call kernel_post_init_check
 
 	mov rdi, [rbp-16]

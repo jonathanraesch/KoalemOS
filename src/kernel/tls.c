@@ -8,10 +8,18 @@
 extern const uint8_t tls_image[];
 extern void* __tls_image_size_sym;
 const size_t tls_image_size = (size_t)&__tls_image_size_sym;
+extern uint8_t __bsp_tls_buf[];
 
 extern void* get_fsbase();
 extern void set_fsbase(void*);
 
+
+void __tls_create_bsp() {
+	uint8_t* ptr = __bsp_tls_buf;
+	*(uint64_t*)ptr = (uint64_t)&ptr[tls_image_size+8];
+	memcpy(ptr+8, tls_image, tls_image_size);
+	set_fsbase(ptr);
+}
 
 bool tls_create() {
 	uint8_t* ptr = kmalloc(tls_image_size + 8);
