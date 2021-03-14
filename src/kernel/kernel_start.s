@@ -21,6 +21,10 @@ kernel_gdt_jmp_target:
 .align 8
 kernel_tss:
 .4byte 0
+.8byte 0	# privilege level 0 rsp
+.8byte 0	# privilege level 1 rsp
+.8byte 0	# privilege level 2 rsp
+.8byte 0
 .8byte istack_0_bottom
 .8byte istack_1_bottom
 .8byte istack_2_bottom
