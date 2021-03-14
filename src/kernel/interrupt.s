@@ -20,9 +20,15 @@ load_idt:
 
 .global isr_not_implemented
 isr_not_implemented:
+	lea rdi, isr_not_implemented_str[rip]
 	call kernel_panic
 
 .global isr_do_nothing
 isr_do_nothing:
 	nop
 	iretq
+
+
+.section .rodata
+isr_not_implemented_str:
+.string32 "interrupt not implemented"

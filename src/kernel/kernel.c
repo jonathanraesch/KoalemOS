@@ -11,7 +11,7 @@ void kmain(gop_framebuffer_info* gop_fb_info, void* acpi_x_r_sdt, uint64_t tsc_f
 	fill_screen(0.0, 0.0, 0.0);
 	init_acpi(acpi_x_r_sdt);
 	if(!init_pci()) {
-		kernel_panic();
+		kernel_panic(U"failed to initialize PCI");
 	}
 	init_apic(tsc_freq_hz);
 

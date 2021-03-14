@@ -150,7 +150,7 @@ void map_page(void* vaddr, void* paddr, uint64_t flags) {
 			}
 			*PML4E_ADDR_OF(vaddr) = (uintptr_t)pdpt_addr | PAGING_FLAG_PRESENT | flags;
 		} else {
-			kernel_panic();
+			kernel_panic(U"no space for PDPT");
 		}
 	}
 	if (*PDPTE_ADDR_OF(vaddr) & PAGING_FLAG_PRESENT) {
@@ -171,7 +171,7 @@ void map_page(void* vaddr, void* paddr, uint64_t flags) {
 			*PDPTE_ADDR_OF(vaddr) = (uintptr_t)pde_addr | PAGING_FLAG_PRESENT | flags;
 			*PML4E_ADDR_OF(vaddr) = pml4e_val;
 		} else {
-			kernel_panic();
+			kernel_panic(U"no space for PD");
 		}
 	}
 	if (*PDE_ADDR_OF(vaddr) & PAGING_FLAG_PRESENT) {
@@ -194,7 +194,7 @@ void map_page(void* vaddr, void* paddr, uint64_t flags) {
 			*PDPTE_ADDR_OF(vaddr) = pdpte_val;
 			*PML4E_ADDR_OF(vaddr) = pml4e_val;
 		} else {
-			kernel_panic();
+			kernel_panic(U"no space for PT");
 		}
 	}
 	uint64_t pml4e_val = *PML4E_ADDR_OF(vaddr);
@@ -296,7 +296,7 @@ static void init_mmap(efi_mmap_data* mmap_data) {
 					cur_desc.PhysicalStart += 0x1000;
 				}
 				if(!mmap_add_range(&phys_mmap, (void*)cur_desc.PhysicalStart, cur_desc.NumberOfPages)) {
-					kernel_panic();
+					kernel_panic(U"phys_mmap too large");
 				}
 			default:
 				for(uint64_t i = 0; i < cur_desc.NumberOfPages; i++) {
@@ -312,7 +312,7 @@ static void init_mmap(efi_mmap_data* mmap_data) {
 	}
 
 	if(ap_boot_paddr_unset) {
-		kernel_panic();
+		kernel_panic(U"no space for AP bootstrap code");
 	}
 
 	for(uintptr_t page_base = (uintptr_t)PAGE_BASE(efi_mmap_start); page_base<=(uintptr_t)efi_mmap_end; page_base+=0x1000) {

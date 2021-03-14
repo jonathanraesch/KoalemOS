@@ -27,7 +27,7 @@ void init_acpi(void* acpi_x_r_sdt) {
 		rsdt_entries = (uint32_t*)((uintptr_t)acpi_x_r_sdt + SDT_HEADER_SIZE);
 		sdt_entry_count = (sdt_len - SDT_HEADER_SIZE)/4;
 	} else {
-		kernel_panic();
+		kernel_panic(U"neither XSDT nor RSDT present");
 	}
 }
 
@@ -49,7 +49,7 @@ bool get_acpi_table(uint32_t signature, acpi_sdt* table) {
 			}
 			break;
 		default:
-			kernel_panic();	// this should never happen
+			kernel_panic(U"ACPI not initialized properly");	// this should never happen
 
 	}
 	if(!table_addr) {

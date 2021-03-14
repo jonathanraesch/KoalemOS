@@ -62,29 +62,29 @@ static pixel_bgrx8u col_lerp(pixel_bgrx8u a, pixel_bgrx8u b, float t) {
 static void init_freetype(int font_size) {
 	FT_Error ft_error = FT_Init_FreeType(&ft_library);
 	if(ft_error) {
-		kernel_panic();
+		kernel_panic(U"FreeType error");
 	}
 
 	ft_error = FT_New_Memory_Face(ft_library, roboto_mono_ttf, roboto_mono_ttf_size, 0, &ft_face);
 	if(ft_error) {
-		kernel_panic();
+		kernel_panic(U"FreeType error");
 	}
 
 	ft_error = FT_Set_Pixel_Sizes(ft_face, 0, font_size);
 	if(ft_error) {
-		kernel_panic();
+		kernel_panic(U"FreeType error");
 	}
 
 
 	FT_UInt glyph_index = FT_Get_Char_Index(ft_face, ' ');
 	ft_error = FT_Load_Glyph(ft_face, glyph_index, FT_LOAD_DEFAULT);
 	if(ft_error) {
-		kernel_panic();
+		kernel_panic(U"FreeType error");
 	}
 
 	ft_error = FT_Render_Glyph(ft_face->glyph, FT_RENDER_MODE_NORMAL);
 	if(ft_error) {
-		kernel_panic();
+		kernel_panic(U"FreeType error");
 	}
 
 	adv_x = ft_face->glyph->linearHoriAdvance/65535.0;
@@ -179,12 +179,12 @@ static pixel_bgrx8u* get_glyph(uint32_t ch) {
 	FT_UInt glyph_index = FT_Get_Char_Index(ft_face, ch);
 	FT_Error ft_error = FT_Load_Glyph(ft_face, glyph_index, FT_LOAD_DEFAULT);
 	if(ft_error) {
-		kernel_panic();
+		kernel_panic(U"FreeType error");
 	}
 
 	ft_error = FT_Render_Glyph(ft_face->glyph, FT_RENDER_MODE_NORMAL);
 	if(ft_error) {
-		kernel_panic();
+		kernel_panic(U"FreeType error");
 	}
 
 	FT_Bitmap* ft_bm = &ft_face->glyph->bitmap;

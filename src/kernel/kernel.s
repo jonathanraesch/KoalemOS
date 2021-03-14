@@ -4,7 +4,15 @@
 .global kernel_panic
 kernel_panic:
 	cli
-	lea rdi, panic_str[rip]
+	mov rbx, rdi
+
+	lea rdi, panic_str_front[rip]
+	call print_str
+
+	mov rdi, rbx
+	call print_str
+
+	lea rdi, panic_str_back[rip]
 	call print_str
 	_kernel_panic_loop:
 	hlt
@@ -13,5 +21,7 @@ kernel_panic:
 
 .section .rodata
 
-panic_str:
-.string32 "\n--- kernel panic! ---\n"
+panic_str_front:
+.string32 "\n--- kernel panic: "
+panic_str_back:
+.string32 "! ---\n"
