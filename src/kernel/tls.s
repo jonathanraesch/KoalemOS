@@ -11,6 +11,8 @@ get_fsbase:
 
 .global set_fsbase
 set_fsbase:
+	mov ax, 0
+	mov fs, ax
 	mov rax, rdi
 	mov rdx, rax
 	shr rdx, 32
