@@ -237,7 +237,7 @@ static void unmap_page_fix_size(void* vaddr) {
 		*PML4E_ADDR_OF(vaddr) = pml4e_val;
 		invalidate_tlbs_for(vaddr);
 		for(uintptr_t offset = 0; offset < 0x40000000; offset += 0x1000) {
-			map_page((void*)(ALIGN_DOWN(vaddr, 0x40000000)+offset), (void*)page_addr, flags);
+			map_page((void*)(ALIGN_DOWN(vaddr, 0x40000000)+offset), (void*)(page_addr+offset), flags);
 		}
 	} else if(*PDE_ADDR_OF(vaddr) & PAGING_FLAG_PAGE_SIZE) {
 		uint64_t flags = *PDE_ADDR_OF(vaddr) & 0x3E;
@@ -251,7 +251,7 @@ static void unmap_page_fix_size(void* vaddr) {
 		*PML4E_ADDR_OF(vaddr) = pml4e_val;
 		invalidate_tlbs_for(vaddr);
 		for(uintptr_t offset = 0; offset < 0x200000; offset += 0x1000) {
-			map_page((void*)(ALIGN_DOWN(vaddr, 0x200000)+offset), (void*)page_addr, flags);
+			map_page((void*)(ALIGN_DOWN(vaddr, 0x200000)+offset), (void*)(page_addr+offset), flags);
 		}
 	}
 
