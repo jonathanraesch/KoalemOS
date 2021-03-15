@@ -4,8 +4,27 @@
 
 extern uint16_t get_cs();
 extern void load_idt(void* base, uint16_t limit);
-extern void isr_not_implemented();
-extern void isr_do_nothing();
+
+extern void isr_divide_error();
+extern void isr_debug();
+extern void isr_nmi();
+extern void isr_breakpoint();
+extern void isr_overflow();
+extern void isr_bound_range();
+extern void isr_invalid_opcode();
+extern void isr_no_coproc();
+extern void isr_double_fault();
+extern void isr_invalid_tss();
+extern void isr_segment_not_present();
+extern void isr_ss_fault();
+extern void isr_general_protection();
+extern void isr_page_fault();
+extern void isr_math_fault();
+extern void isr_align_check();
+extern void isr_machine_check();
+extern void isr_simd_exception();
+extern void isr_virtualization_exception();
+extern void isr_control_protection();
 
 
 #define IDT_GATE_PRESENT_FLAG 0x800000000000
@@ -50,16 +69,33 @@ void free_interrupt_vector(uint8_t vec) {
 
 void setup_idt() {
 	uint16_t cs = get_cs();
-	for(int i = 0; i < 22; i++) {
-		idt[i] = IDT_INT_GATE(isr_not_implemented, cs, 0, 0);
-	}
+
+	idt[0] = IDT_INT_GATE(isr_divide_error, cs, 0, 0);
+	idt[1] = IDT_INT_GATE(isr_debug, cs, 0, 0);
+	idt[2] = IDT_INT_GATE(isr_nmi, cs, 0, 0);
+	idt[3] = IDT_INT_GATE(isr_breakpoint, cs, 0, 0);
+	idt[4] = IDT_INT_GATE(isr_overflow, cs, 0, 0);
+	idt[5] = IDT_INT_GATE(isr_bound_range, cs, 0, 0);
+	idt[6] = IDT_INT_GATE(isr_invalid_opcode, cs, 0, 0);
+	idt[7] = IDT_INT_GATE(isr_no_coproc, cs, 0, 0);
+	idt[8] = IDT_INT_GATE(isr_double_fault, cs, 0, 0);
+	idt[9] = (idt_gate_descr){.low=0, .high=0};
+	idt[10] = IDT_INT_GATE(isr_invalid_tss, cs, 0, 0);
+	idt[11] = IDT_INT_GATE(isr_segment_not_present, cs, 0, 0);
+	idt[12] = IDT_INT_GATE(isr_ss_fault, cs, 0, 0);
+	idt[13] = IDT_INT_GATE(isr_general_protection, cs, 0, 0);
+	idt[14] = IDT_INT_GATE(isr_page_fault, cs, 0, 0);
+	idt[15] = (idt_gate_descr){.low=0, .high=0};
+	idt[16] = IDT_INT_GATE(isr_math_fault, cs, 0, 0);
+	idt[17] = IDT_INT_GATE(isr_align_check, cs, 0, 0);
+	idt[18] = IDT_INT_GATE(isr_machine_check, cs, 0, 0);
+	idt[19] = IDT_INT_GATE(isr_simd_exception, cs, 0, 0);
+	idt[20] = IDT_INT_GATE(isr_virtualization_exception, cs, 0, 0);
+	idt[21] = IDT_INT_GATE(isr_control_protection, cs, 0, 0);
+
 	for(int i = 22; i < IDT_ENTRY_COUNT; i++) {
 		idt[i] = (idt_gate_descr){.low=0, .high=0};
 	}
-	idt[15] = (idt_gate_descr){.low=0, .high=0};	// interrupt 15
-
-	idt[1] = IDT_INT_GATE(isr_do_nothing, cs, 0, 0);	// DB
-	idt[3] = IDT_INT_GATE(isr_do_nothing, cs, 0, 0);	// BP
 
 	load_idt(idt, IDT_ENTRY_COUNT*sizeof(idt_gate_descr)-1);
 }
