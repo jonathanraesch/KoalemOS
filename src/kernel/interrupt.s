@@ -140,9 +140,9 @@ isr_errstr_segment_not_present:
 isr_errstr_ss_fault:
 .string32 "stack-segment fault [#SS]"
 isr_errstr_general_protection:
-.string32 "general protection [#]"
+.string32 "general protection [#GP]"
 isr_errstr_page_fault:
-.string32 "page fault [#GP]"
+.string32 "page fault [#PF]"
 isr_errstr_math_fault:
 .string32 "x87 FPU floating-point error [#MF]"
 isr_errstr_align_check:
