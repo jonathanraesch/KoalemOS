@@ -17,7 +17,10 @@ extern void set_fsbase(void*);
 void __tls_create_bsp() {
 	uint8_t* ptr = __bsp_tls_buf;
 	*(uint64_t*)ptr = (uint64_t)&ptr[tls_image_size+8];
-	memcpy(ptr+8, tls_image, tls_image_size);
+	// using a loop instead of memcpy limits stack usage
+	for(int i = 0; i < tls_image_size; i++) {
+		ptr[i+8] = tls_image[i];
+	}
 	set_fsbase(ptr);
 }
 
