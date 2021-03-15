@@ -5,6 +5,7 @@
 #include "kernel/apic.h"
 #include "kernel/ap_boot.h"
 
+extern void* ap_boot_paddr;
 
 void kmain(gop_framebuffer_info* gop_fb_info, void* acpi_x_r_sdt, uint64_t tsc_freq_hz) {
 	init_graphics(gop_fb_info, 20);
@@ -17,7 +18,7 @@ void kmain(gop_framebuffer_info* gop_fb_info, void* acpi_x_r_sdt, uint64_t tsc_f
 
 	boot_aps();
 
-	volatile uint8_t* v = (uint8_t*)(ap_boot_image_size-1);
+	volatile uint8_t* v = (uint8_t*)((uintptr_t)ap_boot_paddr+ap_boot_image_size-1);
 	uint8_t cpus_counted = 0;
 	while(1) {
 		if(*v > cpus_counted) {
