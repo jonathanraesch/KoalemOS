@@ -15,14 +15,20 @@ _ap_bootstrap_start:
 
 	lock inc word ptr [ap_count]
 
-	lea ax, gdt32[si]
+	lea ax, [gdt32]
+	mov bx, 0
+	add ax, si
+	adc bx, di
 	mov word ptr [gdtr32+2], ax
-	mov word ptr [gdtr32+4], di
+	mov word ptr [gdtr32+4], bx
 	lgdt [gdtr32]
 
-	lea ax, _pm_jmp_target[si]
+	lea ax, [_pm_jmp_target]
+	mov bx, 0
+	add ax, si
+	adc bx, di
 	mov word ptr [pm_jmp], ax
-	mov word ptr [pm_jmp+2], di
+	mov word ptr [pm_jmp+2], bx
 	lea bx, [pm_jmp]
 
 	mov eax, cr0
