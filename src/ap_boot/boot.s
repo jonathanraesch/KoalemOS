@@ -51,7 +51,40 @@ _ap_bootstrap_start:
 	shl ebp, 16
 	mov bp, si
 
-	lock inc word ptr ap_count_done[bp]
+
+	lea eax, gdt64[ebp]
+	mov dword ptr gdtr64+2[ebp], eax
+
+	lea eax, _lm_jmp_target[ebp]
+	mov dword ptr lm_jmp[ebp], eax
+
+	mov eax, cr4
+	or eax, 0x20
+	mov cr4, eax
+
+	lea eax, pdpt[ebp]
+	lock or dword ptr pml4[ebp], eax
+	lea eax, pd[ebp]
+	lock or dword ptr pdpt[ebp], eax
+	lea eax, pml4[ebp]
+	mov cr3, eax
+
+	mov ecx, 0xC0000080
+	rdmsr
+	or eax, 0x100
+	wrmsr
+
+	mov eax, cr0
+	or eax, 0x80000000
+	mov cr0, eax
+
+	lgdt gdtr64[ebp]
+	ljmp lm_jmp[ebp]
+
+.code64
+	_lm_jmp_target:
+
+	lock inc word ptr ap_count_done[ebp]
 
 	_ap_bootstrap_end:
 	jmp _ap_bootstrap_end
@@ -68,8 +101,35 @@ gdtr32:
 .2byte 23
 .4byte 0
 
+gdt64:
+.8byte 0
+.8byte 0x209A0000000000
+.balign 4
+.2byte 0	# alignment padding
+gdtr64:
+.2byte 15
+.4byte 0
+
+.balign 0x1000
+pml4:
+.8byte 1 | 2
+.skip 0xFF8
+.balign 0x1000, 0
+pdpt:
+.8byte 1 | 2
+.skip 0xFF8
+.balign 0x1000, 0
+pd:
+.8byte 1 | 2 | 0x80
+.skip 0xFF8
+
 .balign 2
 pm_jmp:
+.4byte 0
+.2byte 8
+
+.balign 4
+lm_jmp:
 .4byte 0
 .2byte 8
 
