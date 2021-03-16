@@ -29,13 +29,12 @@ _ap_bootstrap_start:
 	adc bx, di
 	mov word ptr [pm_jmp], ax
 	mov word ptr [pm_jmp+2], bx
-	lea bx, [pm_jmp]
 
 	mov eax, cr0
 	or eax, 1
 	mov cr0, eax
 
-	data32 ljmp [bx]
+	data32 ljmp [pm_jmp]
 
 .code32
 	_pm_jmp_target:
