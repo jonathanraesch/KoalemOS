@@ -18,11 +18,10 @@ void kmain(gop_framebuffer_info* gop_fb_info, void* acpi_x_r_sdt, uint64_t tsc_f
 
 	boot_aps();
 
-	volatile uint8_t* v = (uint8_t*)((uintptr_t)ap_boot_paddr+ap_boot_image_size-1);
-	volatile uint8_t* count_ptr = (uint8_t*)((uintptr_t)ap_boot_paddr + ap_boot_image_size - 1);
-	volatile uint8_t* done_ptr = (uint8_t*)((uintptr_t)ap_boot_paddr + ap_boot_image_size - 2);
-	uint8_t cpus_counted = 0;
-	uint8_t cpus_done = 0;
+	volatile uint16_t* count_ptr = (uint16_t*)((uintptr_t)ap_boot_paddr + ap_boot_image_size - 1);
+	volatile uint16_t* done_ptr = (uint16_t*)((uintptr_t)ap_boot_paddr + ap_boot_image_size - 2);
+	uint16_t cpus_counted = 0;
+	uint16_t cpus_done = 0;
 	while(1) {
 		if(*count_ptr > cpus_counted) {
 			print_char('C');

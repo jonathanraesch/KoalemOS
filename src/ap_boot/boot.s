@@ -74,6 +74,6 @@ pm_jmp:
 .2byte 8
 
 ap_count_done:
-.byte 0
+.2byte 0
 ap_count:
-.byte 0
+.2byte 0
