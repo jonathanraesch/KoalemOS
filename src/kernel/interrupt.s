@@ -14,6 +14,7 @@ load_idt:
 	mov [rbp-8], rdi
 	mov [rbp-10], si
 	lidt [rbp-10]
+	sti
 	leave
 	ret
 

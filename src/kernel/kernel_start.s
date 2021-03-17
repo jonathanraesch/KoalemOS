@@ -30,7 +30,6 @@ _kernel_start:
 	call init_gdt
 
 	call setup_idt
-	sti
 
 	mov rdi, efi_mmap_data[rip]
 	call init_memory_management
