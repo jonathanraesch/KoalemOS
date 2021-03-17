@@ -39,15 +39,14 @@ The configurable options are set by environment variables:
 
 ### error checking/prevention
 * add tests
-* do bounds checking on initial static kernel stack
 * clean up/codify interface between bootloader and kernel
 * specify dependencies between parts of kernel (e.g. init_acpi needing to be called before init_pci)
   * could likely be solved by implementing kernel modules
 * check ACPI table checksums
 * check kernel heap limit in kmalloc/krealloc
+* possibly add static bounds checking for stacks
 
 ### memory
-* set up dynamic kernel stack
 * fix memory leak from paging structures (if feasible, also from physical memory map)
 * expand paging support
   * add memory typing using PAT/MTRRs
