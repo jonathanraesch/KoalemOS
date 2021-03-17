@@ -83,6 +83,13 @@ _ap_bootstrap_start:
 
 .code64
 	_lm_jmp_target:
+	mov ax, 0
+	mov ds, ax
+	mov ss, ax
+	mov ds, ax
+	mov es, ax
+	mov fs, ax
+	mov gs, ax
 
 	lock inc word ptr ap_count_done[ebp]
 
