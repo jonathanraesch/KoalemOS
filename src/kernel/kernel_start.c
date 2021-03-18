@@ -35,10 +35,13 @@ void __kernel_bsp_init(boot_info* bi_ptr) {
 
 void __kernel_init(boot_info* bi_ptr) {
 	init_gdt();
-	setup_idt();
 
 	if(bi_ptr) {
+		setup_idt();
+		init_idt();
 		__kernel_bsp_init(bi_ptr);
+	} else {
+		init_idt();
 	}
 
 	init_apic(boot_inf.tsc_freq_hz);

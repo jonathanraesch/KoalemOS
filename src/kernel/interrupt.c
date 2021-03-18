@@ -96,6 +96,8 @@ void setup_idt() {
 	for(int i = 22; i < IDT_ENTRY_COUNT; i++) {
 		idt[i] = (idt_gate_descr){.low=0, .high=0};
 	}
+}
 
+void init_idt() {
 	load_idt(idt, IDT_ENTRY_COUNT*sizeof(idt_gate_descr)-1);
 }
