@@ -7,6 +7,7 @@ get_pml4:
 .global boot_end
 boot_end:
 	mov %rdi, %cr3
+	mov %rdx, %rdi
 	jmp *%rsi
 
 

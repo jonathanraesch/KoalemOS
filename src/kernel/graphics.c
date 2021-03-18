@@ -98,17 +98,7 @@ static void init_freetype(int font_size) {
 }
 
 void init_graphics(gop_framebuffer_info* info, int font_size) {
-	if(PAGE_BASE(info) != PAGE_BASE(info+1)) {
-		map_page(PAGE_BASE(info), PAGE_BASE(info), 0);
-		map_page(PAGE_BASE(info+1), PAGE_BASE(info+1), 0);
-		fb_info = *info;
-		unmap_page(PAGE_BASE(info));
-		unmap_page(PAGE_BASE(info+1));
-	} else {
-		map_page(PAGE_BASE(info), PAGE_BASE(info), 0);
-		fb_info = *info;
-		unmap_page(PAGE_BASE(info));
-	}
+	fb_info = *info;
 	uint8_t* last = PAGE_BASE((uintptr_t)fb_info.addr + fb_info.hres*fb_info.vres*4);
 	for(uint8_t* base = (uint8_t*)PAGE_BASE(fb_info.addr); base <= last; base += 0x1000) {
 		map_page(base, base, PAGING_FLAG_READ_WRITE | PAGING_FLAG_PAGE_LEVEL_CACHE_DISABLE);

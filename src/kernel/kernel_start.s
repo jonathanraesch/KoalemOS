@@ -13,27 +13,20 @@ tsc_freq_hz:
 
 .section .text
 
+# _kernel_start(boot_info*);
 .global _kernel_start
 _kernel_start:
 	cli
 
-	mov efi_mmap_data[rip], rdx
-	mov fb_info[rip], rcx
-	mov acpi_x_r_sdt[rip], r8
-	mov tsc_freq_hz[rip], r9
+	mov rbx, rdi
 
 	call __tls_create_bsp
 
 	call __get_kernel_sp
 	mov rsp, rax
 
-	mov rdi, efi_mmap_data[rip]
-	mov rsi, tsc_freq_hz[rip]
+	mov rdi, rbx
 	call __kernel_init
-
-	mov rdi, fb_info[rip]
-	mov rsi, acpi_x_r_sdt[rip]
-	call __kernel_bsp_init
 
 	call kmain
 

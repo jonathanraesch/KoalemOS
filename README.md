@@ -39,7 +39,6 @@ The configurable options are set by environment variables:
 
 ### error checking/prevention
 * add tests
-* clean up/codify interface between bootloader and kernel
 * specify dependencies between parts of kernel (e.g. init_acpi needing to be called before init_pci)
   * could likely be solved by implementing kernel modules
 * check ACPI table checksums

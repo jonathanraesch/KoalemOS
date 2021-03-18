@@ -251,6 +251,11 @@ efi_main (EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table) {
 	}
 
 
-	efi_mmap_data mmap_data = {.descriptors = mmap, .mmap_size=mmap_buf_size, .descriptor_size=descr_size};
-	boot_end((void*)pml4, (void*)kernel_elf_header->entry, &mmap_data, &fb_info, acpi_x_r_sdt, tsc_freq_hz);
+	boot_info bi = {
+		.mmap_data = {.descriptors = mmap, .mmap_size=mmap_buf_size, .descriptor_size=descr_size},
+		.gop_fb_info = fb_info,
+		.acpi_x_r_sdt = acpi_x_r_sdt,
+		.tsc_freq_hz = tsc_freq_hz
+	};
+	boot_end((void*)pml4, (void*)kernel_elf_header->entry, &bi);
 }
