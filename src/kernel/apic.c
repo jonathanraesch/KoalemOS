@@ -157,4 +157,6 @@ void send_init_sipi_sipi(uint8_t vec) {
 	tsc_target = __apic_read_tsc() + tsc_freq/5000;
 	while(__apic_read_tsc() < tsc_target) {}
 	APIC_REG(APIC_OFFS_ICR_LO) = APIC_IPI_DEST_NOTSELF | APIC_IPI_LEV_ASS | APIC_IPI_DELIV_SIPI | vec;
+	tsc_target = __apic_read_tsc() + tsc_freq/10;
+	while(__apic_read_tsc() < tsc_target) {}
 }
