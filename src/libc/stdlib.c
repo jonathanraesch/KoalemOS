@@ -111,7 +111,7 @@ void memswap(void* lhs, void* rhs, size_t count) {
 	}
 }
 
-size_t partition(void* ptr, size_t count, size_t size, int (*comp)(const void *, const void *), size_t piv_index) {
+static size_t partition(void* ptr, size_t count, size_t size, int (*comp)(const void *, const void *), size_t piv_index) {
 	memswap(ptr, (void*)((uintptr_t)ptr + piv_index), size);
 	size_t i = 1;
 	size_t j = count-1;
