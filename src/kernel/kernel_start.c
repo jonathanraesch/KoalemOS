@@ -37,7 +37,9 @@ void __kernel_init(boot_info* bi_ptr) {
 	init_gdt();
 	setup_idt();
 
-	__kernel_bsp_init(bi_ptr);
+	if(bi_ptr) {
+		__kernel_bsp_init(bi_ptr);
+	}
 
 	init_apic(boot_inf.tsc_freq_hz);
 	uint16_t ap_count = boot_aps();
