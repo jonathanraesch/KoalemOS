@@ -1,3 +1,4 @@
+#include "kernel/gdt.h"
 #include <stdint.h>
 #include <stdbool.h>
 

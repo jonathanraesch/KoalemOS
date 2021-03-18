@@ -2,7 +2,6 @@
 #include "kernel/kernel.h"
 #include "kernel/mmap.h"
 #include "kernel/ap_boot.h"
-#include "common/mmap.h"
 #include <stdbool.h>
 #include <stdalign.h>
 #include <string.h>

@@ -27,17 +27,14 @@ _kernel_start:
 	call __get_kernel_sp
 	mov rsp, rax
 
-	call init_gdt
-
-	call setup_idt
-
 	mov rdi, efi_mmap_data[rip]
-	call init_memory_management
-	call kernel_post_init_check
+	mov rsi, tsc_freq_hz[rip]
+	call __kernel_init
 
 	mov rdi, fb_info[rip]
 	mov rsi, acpi_x_r_sdt[rip]
-	mov rdx, tsc_freq_hz[rip]
+	call __kernel_bsp_init
+
 	call kmain
 
 kloop:
