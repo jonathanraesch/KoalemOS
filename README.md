@@ -80,3 +80,4 @@ The configurable options are set by environment variables:
 * implement methods of timing CPU clocks using CPUID and/or MSRs (see Intel SDM Vol3 Ch10.5.4, Ch18.7.3)
   * these methods should work, but are currently not testable
   * may resolve timing issues when testing with KVM
+* optimize mutex use / synchronization

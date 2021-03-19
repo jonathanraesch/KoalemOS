@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <stdalign.h>
 #include <string.h>
+#include <threads.h>
 
 
 extern void invalidate_tlbs_for(volatile void* vaddr);
@@ -69,9 +70,21 @@ static heap_entry* last_heap_entry;
 
 static memory_map virt_mmap;
 
+static mtx_t heap_mutex;
+static mtx_t phys_mmap_mutex;
+static mtx_t phys_mmap_ext_mutex;
+static mtx_t virt_mmap_mutex;
+static mtx_t paging_mutex;
+
 
 static void* alloc_phys_pages(uint64_t pages) {
+	if(mtx_lock(&phys_mmap_mutex) != thrd_success) {
+		kernel_panic(U"mutex failed");
+	}
 	void* base_addr = mmap_get_pages(&phys_mmap, pages);
+	if(mtx_unlock(&phys_mmap_mutex) != thrd_success) {
+		kernel_panic(U"mutex failed");
+	}
 	if(base_addr) {
 		return base_addr;
 	}
@@ -80,14 +93,32 @@ static void* alloc_phys_pages(uint64_t pages) {
 
 // TODO: if feasible, resize memory map after merge
 static bool free_phys_pages(void* base_addr, uint64_t count) {
+	if(mtx_lock(&phys_mmap_mutex) != thrd_success) {
+		kernel_panic(U"mutex failed");
+	}
 	if(mmap_add_range_merge(&phys_mmap, base_addr, count)) {
+		if(mtx_unlock(&phys_mmap_mutex) != thrd_success) {
+			kernel_panic(U"mutex failed");
+		}
 		return true;
 	}
+	if(mtx_unlock(&phys_mmap_mutex) != thrd_success) {
+		kernel_panic(U"mutex failed");
+	}
+	if(mtx_lock(&phys_mmap_ext_mutex) != thrd_success) {
+		kernel_panic(U"mutex failed");
+	}
 	if(phys_mmap.max_range_count*sizeof(memory_range) + count*0x1000 >= phys_mmap_max_size) {
+		if(mtx_unlock(&phys_mmap_ext_mutex) != thrd_success) {
+			kernel_panic(U"mutex failed");
+		}
 		return false;
 	}
 	map_page(phys_mmap.memory_ranges + phys_mmap.max_range_count, base_addr, PAGING_FLAG_READ_WRITE);
 	phys_mmap.max_range_count += count*0x1000 / sizeof(memory_range);
+	if(mtx_unlock(&phys_mmap_ext_mutex) != thrd_success) {
+		kernel_panic(U"mutex failed");
+	}
 	return true;
 }
 
@@ -103,25 +134,47 @@ static void virt_mmap_reduce() {
 }
 
 void* alloc_virt_pages(uint64_t pages) {
+	if(mtx_lock(&virt_mmap_mutex) != thrd_success) {
+		kernel_panic(U"mutex failed");
+	}
 	void* base_addr = mmap_get_pages(&virt_mmap, pages);
 	if(base_addr) {
 		virt_mmap_reduce();
+		if(mtx_unlock(&virt_mmap_mutex) != thrd_success) {
+			kernel_panic(U"mutex failed");
+		}
 		return base_addr;
+	}
+	if(mtx_unlock(&virt_mmap_mutex) != thrd_success) {
+		kernel_panic(U"mutex failed");
 	}
 	return 0;
 }
 
 int free_virt_pages(void* base_addr, uint64_t count) {
+	if(mtx_lock(&virt_mmap_mutex) != thrd_success) {
+		kernel_panic(U"mutex failed");
+	}
 	if(mmap_add_range_merge(&virt_mmap, base_addr, count)) {
 		virt_mmap_reduce();
+		if(mtx_unlock(&virt_mmap_mutex) != thrd_success) {
+			kernel_panic(U"mutex failed");
+		}
 		return true;
 	}
 	void* new_ranges = krealloc(virt_mmap.memory_ranges, virt_mmap.range_count*2*sizeof(memory_range));
 	if(!new_ranges) {
+		if(mtx_unlock(&virt_mmap_mutex) != thrd_success) {
+			kernel_panic(U"mutex failed");
+		}
 		return false;
 	}
 	virt_mmap.memory_ranges = new_ranges;
 	virt_mmap.max_range_count = virt_mmap.range_count*2;
+	int ret = ret;
+	if(mtx_unlock(&virt_mmap_mutex) != thrd_success) {
+		kernel_panic(U"mutex failed");
+	}
 	return free_virt_pages(base_addr, count);
 }
 
@@ -135,6 +188,9 @@ int free_virt_pages(void* base_addr, uint64_t count) {
 
 // TODO: make address calculation for zeroing structures more readable and/or performant
 void map_page(void* vaddr, void* paddr, uint64_t flags) {
+	if(mtx_lock(&paging_mutex) != thrd_success) {
+		kernel_panic(U"mutex failed");
+	}
 	if (*PML4E_ADDR_OF(vaddr) & PAGING_FLAG_PRESENT) {
 		*PML4E_ADDR_OF(vaddr) |= flags;
 	} else {
@@ -209,11 +265,17 @@ void map_page(void* vaddr, void* paddr, uint64_t flags) {
 	*PDPTE_ADDR_OF(vaddr) = pdpte_val;
 	*PML4E_ADDR_OF(vaddr) = pml4e_val;
 
+	if(mtx_unlock(&paging_mutex) != thrd_success) {
+		kernel_panic(U"mutex failed");
+	}
 	invalidate_tlbs_for(vaddr);
 }
 
 // TODO: fix memory leak
 void unmap_page(void* vaddr) {
+	if(mtx_lock(&paging_mutex) != thrd_success) {
+		kernel_panic(U"mutex failed");
+	}
 	uint64_t pml4e_val = *PML4E_ADDR_OF(vaddr);
 	*PML4E_ADDR_OF(vaddr) |= PAGING_FLAG_READ_WRITE;
 	uint64_t pdpte_val = *PDPTE_ADDR_OF(vaddr);
@@ -225,6 +287,9 @@ void unmap_page(void* vaddr) {
 	*PDPTE_ADDR_OF(vaddr) = pdpte_val;
 	*PML4E_ADDR_OF(vaddr) = pml4e_val;
 
+	if(mtx_unlock(&paging_mutex) != thrd_success) {
+		kernel_panic(U"mutex failed");
+	}
 	invalidate_tlbs_for(vaddr);
 }
 
@@ -340,6 +405,12 @@ static void init_virt_mmap() {
 }
 
 void init_memory_management(efi_mmap_data* mmap_data) {
+	mtx_init(&heap_mutex, mtx_plain);
+	mtx_init(&phys_mmap_mutex, mtx_plain);
+	mtx_init(&phys_mmap_ext_mutex, mtx_plain);
+	mtx_init(&virt_mmap_mutex, mtx_plain);
+	mtx_init(&paging_mutex, mtx_plain);
+
 	init_mmap(mmap_data);
 	init_heap();
 	init_virt_mmap();
@@ -350,6 +421,9 @@ void* kmalloc(size_t size) {
 	size = ALIGN_UP(size, alignof(max_align_t));
 	heap_entry* entry = first_heap_entry;
 
+	if(mtx_lock(&heap_mutex) != thrd_success) {
+		kernel_panic(U"mutex failed");
+	}
 	while(entry) {
 		if(!entry->used && entry->size >= size) {
 			break;
@@ -361,6 +435,9 @@ void* kmalloc(size_t size) {
 		uint64_t page_count = (size + sizeof(heap_entry)) / 0x1000 + 1;
 		void* paddr = alloc_phys_pages(page_count);
 		if(!paddr) {
+			if(mtx_unlock(&heap_mutex) != thrd_success) {
+				kernel_panic(U"mutex failed");
+			}
 			return 0;
 		}
 		for(uint64_t i = 0; i < page_count; i++) {
@@ -393,6 +470,9 @@ void* kmalloc(size_t size) {
 		entry->next = next_entry;
 	}
 
+	if(mtx_unlock(&heap_mutex) != thrd_success) {
+		kernel_panic(U"mutex failed");
+	}
 	return (void*)entry->memory;
 }
 
@@ -400,6 +480,9 @@ void* krealloc(void* ptr, size_t size) {
 	size = ALIGN_UP(size, alignof(max_align_t));
 	heap_entry* entry = (heap_entry*)((uintptr_t)ptr - sizeof(heap_entry));
 
+	if(mtx_lock(&heap_mutex) != thrd_success) {
+		kernel_panic(U"mutex failed");
+	}
 	if(size < entry->size) {
 		if(entry->next) {
 			if(!entry->next->used) {
@@ -410,6 +493,9 @@ void* krealloc(void* ptr, size_t size) {
 					entry->next->next->last = entry->next;
 				} else {
 					last_heap_entry = entry->next;
+				}
+				if(mtx_unlock(&heap_mutex) != thrd_success) {
+					kernel_panic(U"mutex failed");
 				}
 				return ptr;
 			}
@@ -429,9 +515,15 @@ void* krealloc(void* ptr, size_t size) {
 			}
 			entry->next = next_entry;
 		}
+		if(mtx_unlock(&heap_mutex) != thrd_success) {
+			kernel_panic(U"mutex failed");
+		}
 		return ptr;
 	}
 	if(size == entry->size) {
+		if(mtx_unlock(&heap_mutex) != thrd_success) {
+			kernel_panic(U"mutex failed");
+		}
 		return ptr;
 	}
 
@@ -471,7 +563,13 @@ void* krealloc(void* ptr, size_t size) {
 			}
 			entry->next = next_entry;
 		}
+		if(mtx_unlock(&heap_mutex) != thrd_success) {
+			kernel_panic(U"mutex failed");
+		}
 		return ptr;
+	}
+	if(mtx_unlock(&heap_mutex) != thrd_success) {
+		kernel_panic(U"mutex failed");
 	}
 
 	void* ret = kmalloc(size);
@@ -485,6 +583,9 @@ void* krealloc(void* ptr, size_t size) {
 
 void kfree(void* ptr) {
 	heap_entry* entry = (heap_entry*)((uintptr_t)ptr - sizeof(heap_entry));
+	if(mtx_lock(&heap_mutex) != thrd_success) {
+		kernel_panic(U"mutex failed");
+	}
 	entry->used = false;
 	if(entry->last) {
 		if(!entry->last->used && (uintptr_t)entry->last->memory + entry->last->size == (uintptr_t)entry) {
@@ -524,5 +625,8 @@ void kfree(void* ptr) {
 			unmap_page((void*)page_base);
 		}
 		kernel_heap_end = (max_align_t*)new_end;
+	}
+	if(mtx_unlock(&heap_mutex) != thrd_success) {
+		kernel_panic(U"mutex failed");
 	}
 }
