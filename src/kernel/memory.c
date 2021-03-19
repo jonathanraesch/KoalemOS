@@ -56,6 +56,8 @@ typedef struct _heap_entry {
 #define PHYS_MMAP_INIT_MAX_RANGE_COUNT (0x1000 / sizeof(memory_range))
 _Static_assert (!((PHYS_MMAP_INIT_MAX_RANGE_COUNT * sizeof(memory_range)) & 0xfff), "physcial memory map not page-aligned");
 extern memory_range _phys_mmap_range_buf[];
+extern void* __phys_mmap_size_sym;
+static size_t phys_mmap_max_size = (size_t)&__phys_mmap_size_sym;
 static memory_map phys_mmap = {.memory_ranges=_phys_mmap_range_buf, .range_count=0, .max_range_count=PHYS_MMAP_INIT_MAX_RANGE_COUNT};
 
 #define KERNEL_HEAP_MAX_SIZE 0x4000000000
@@ -80,6 +82,9 @@ static void* alloc_phys_pages(uint64_t pages) {
 static bool free_phys_pages(void* base_addr, uint64_t count) {
 	if(mmap_add_range_merge(&phys_mmap, base_addr, count)) {
 		return true;
+	}
+	if(phys_mmap.max_range_count*sizeof(memory_range) + count*0x1000 >= phys_mmap_max_size) {
+		return false;
 	}
 	map_page(phys_mmap.memory_ranges + phys_mmap.max_range_count, base_addr, PAGING_FLAG_READ_WRITE);
 	phys_mmap.max_range_count += count*0x1000 / sizeof(memory_range);

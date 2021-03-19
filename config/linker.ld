@@ -32,7 +32,8 @@ SECTIONS {
 	.phys_mmap BLOCK(4K) : {
 		*(PHYS_MMAP)
 	}
-	. += 0x1000000;
+	__phys_mmap_size_sym = 0x1000000;
+	. += __phys_mmap_size_sym;
 	.heap BLOCK(4K) : {
 		*(KERNEL_HEAP)
 	}
