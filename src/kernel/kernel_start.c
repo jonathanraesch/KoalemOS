@@ -23,6 +23,10 @@ void* __get_kernel_sp() {
 
 void __kernel_bsp_init(boot_info* bi_ptr) {
 	boot_inf = *bi_ptr; // do not use bi_ptr after init_memory_management!
+	setup_idt();
+	init_idt();
+	init_apic(boot_inf.tsc_freq_hz);
+	uint16_t ap_count = boot_aps();
 	init_memory_management(&boot_inf.mmap_data);
 	kernel_post_init_check();
 	init_graphics(&boot_inf.gop_fb_info, 20);
@@ -31,23 +35,19 @@ void __kernel_bsp_init(boot_info* bi_ptr) {
 	if(!init_pci()) {
 		kernel_panic(U"failed to initialize PCI");
 	}
+
+	for(int i = 0; i < ap_count; i++) {
+		print_str(U"AP booted\n");
+	}
 }
 
 void __kernel_init(boot_info* bi_ptr) {
 	init_gdt();
 
 	if(bi_ptr) {
-		setup_idt();
-		init_idt();
 		__kernel_bsp_init(bi_ptr);
 	} else {
 		init_idt();
-	}
-
-	init_apic(boot_inf.tsc_freq_hz);
-	uint16_t ap_count = boot_aps();
-
-	for(int i = 0; i < ap_count; i++) {
-		print_str(U"AP booted\n");
+		init_apic(boot_inf.tsc_freq_hz);
 	}
 }
