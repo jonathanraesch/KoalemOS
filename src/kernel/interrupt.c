@@ -5,7 +5,7 @@
 
 
 extern uint16_t get_cs();
-extern void load_idt(void* base, uint16_t limit);
+extern void load_idt(volatile void* base, uint16_t limit);
 
 extern void isr_divide_error();
 extern void isr_debug();
