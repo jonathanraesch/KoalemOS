@@ -49,7 +49,7 @@ typedef struct {
 
 
 #define IDT_ENTRY_COUNT 256
-static idt_gate_descr idt[IDT_ENTRY_COUNT];
+static volatile idt_gate_descr idt[IDT_ENTRY_COUNT];
 static bool int_used[IDT_ENTRY_COUNT-32];
 
 static mtx_t idt_mutex;
