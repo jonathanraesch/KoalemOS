@@ -5,6 +5,7 @@
 #include "kernel/kernel.h"
 #include <string.h>
 #include <ctype.h>
+#include <threads.h>
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
@@ -47,6 +48,8 @@ static uint32_t font_height;
 
 static void* glyph_cache;
 static size_t glyph_cache_entry_size;
+
+static mtx_t graphics_mutex;
 
 
 static pixel_bgrx8u col_lerp(pixel_bgrx8u a, pixel_bgrx8u b, float t) {
@@ -98,6 +101,9 @@ static void init_freetype(int font_size) {
 }
 
 void init_graphics(gop_framebuffer_info* info, int font_size) {
+	if(mtx_init(&graphics_mutex, mtx_plain) != thrd_success) {
+		kernel_panic(U"mutex failed");
+	}
 	fb_info = *info;
 	uint8_t* last = PAGE_BASE((uintptr_t)fb_info.addr + fb_info.hres*fb_info.vres*4);
 	for(uint8_t* base = (uint8_t*)PAGE_BASE(fb_info.addr); base <= last; base += 0x1000) {
@@ -113,6 +119,9 @@ void init_graphics(gop_framebuffer_info* info, int font_size) {
 
 
 void fill_screen(float red, float green, float blue) {
+	if(mtx_lock(&graphics_mutex) != thrd_success) {
+		kernel_panic(U"mutex failed");
+	}
 	pixel_bgrx8u col = {
 		.red = red*255,
 		.green = green*255,
@@ -124,6 +133,9 @@ void fill_screen(float red, float green, float blue) {
 		for(uint32_t x = 0; x < fb_info.width; x++) {
 			fb[(uint64_t)y*fb_info.width + x] = col;
 		}
+	}
+	if(mtx_unlock(&graphics_mutex) != thrd_success) {
+		kernel_panic(U"mutex failed");
 	}
 }
 
@@ -201,7 +213,7 @@ static inline void check_charpos() {
 	}
 }
 
-void print_char(uint32_t ch) {
+static void __print_char(uint32_t ch) {
 	if(isspace(ch)) {
 		switch(ch) {
 			case '\n':
@@ -239,9 +251,24 @@ void print_char(uint32_t ch) {
 	check_charpos();
 }
 
+void print_char(uint32_t ch) {
+	if(mtx_lock(&graphics_mutex) != thrd_success) {
+		kernel_panic(U"mutex failed");
+	}
+	__print_char(ch);
+	if(mtx_unlock(&graphics_mutex) != thrd_success) {
+		kernel_panic(U"mutex failed");
+	}
+}
 
 void print_str(uint32_t* str) {
+	if(mtx_lock(&graphics_mutex) != thrd_success) {
+		kernel_panic(U"mutex failed");
+	}
 	while(*str) {
-		print_char(*str++);
+		__print_char(*str++);
+	}
+	if(mtx_unlock(&graphics_mutex) != thrd_success) {
+		kernel_panic(U"mutex failed");
 	}
 }
