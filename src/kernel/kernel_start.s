@@ -1,16 +1,4 @@
 
-.section .bss
-
-efi_mmap_data:
-.8byte 0
-fb_info:
-.8byte 0
-acpi_x_r_sdt:
-.8byte 0
-tsc_freq_hz:
-.8byte 0
-
-
 .section .text
 
 # set bi_ptr to nullptr for APs
