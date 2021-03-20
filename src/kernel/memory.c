@@ -405,11 +405,21 @@ static void init_virt_mmap() {
 }
 
 void init_memory_management(efi_mmap_data* mmap_data) {
-	mtx_init(&heap_mutex, mtx_plain);
-	mtx_init(&phys_mmap_mutex, mtx_plain);
-	mtx_init(&phys_mmap_ext_mutex, mtx_plain);
-	mtx_init(&virt_mmap_mutex, mtx_plain);
-	mtx_init(&paging_mutex, mtx_plain);
+	if(mtx_init(&heap_mutex, mtx_plain) != thrd_success) {
+		kernel_panic(U"mutex failed");
+	}
+	if(mtx_init(&phys_mmap_mutex, mtx_plain) != thrd_success) {
+		kernel_panic(U"mutex failed");
+	}
+	if(mtx_init(&phys_mmap_ext_mutex, mtx_plain) != thrd_success) {
+		kernel_panic(U"mutex failed");
+	}
+	if(mtx_init(&virt_mmap_mutex, mtx_plain) != thrd_success) {
+		kernel_panic(U"mutex failed");
+	}
+	if(mtx_init(&paging_mutex, mtx_plain) != thrd_success) {
+		kernel_panic(U"mutex failed");
+	}
 
 	init_mmap(mmap_data);
 	init_heap();
