@@ -1,5 +1,7 @@
 #include "kernel/interrupt.h"
+#include "kernel/kernel.h"
 #include <stdbool.h>
+#include <threads.h>
 
 
 extern uint16_t get_cs();
@@ -50,24 +52,44 @@ typedef struct {
 static idt_gate_descr idt[IDT_ENTRY_COUNT];
 static bool int_used[IDT_ENTRY_COUNT-32];
 
+static mtx_t idt_mutex;
+
 
 uint8_t alloc_interrupt_vector(void isr()) {
+	if(mtx_lock(&idt_mutex) != thrd_success) {
+		kernel_panic(U"mutex failed");
+	}
 	for(int i = 0; i < IDT_ENTRY_COUNT-32; i++) {
 		if(!int_used[i]) {
 			idt[i+32] = IDT_INT_GATE(isr, get_cs(), 0, 0);
 			int_used[i] = true;
+			if(mtx_unlock(&idt_mutex) != thrd_success) {
+				kernel_panic(U"mutex failed");
+			}
 			return i+32;
 		}
+	}
+	if(mtx_unlock(&idt_mutex) != thrd_success) {
+		kernel_panic(U"mutex failed");
 	}
 	return 0;
 }
 
 void free_interrupt_vector(uint8_t vec) {
+	if(mtx_lock(&idt_mutex) != thrd_success) {
+		kernel_panic(U"mutex failed");
+	}
 	idt[vec] = (idt_gate_descr){.low=0, .high=0};
 	int_used[vec-32] = false;
+	if(mtx_unlock(&idt_mutex) != thrd_success) {
+		kernel_panic(U"mutex failed");
+	}
 }
 
 void setup_idt() {
+	if(mtx_init(&idt_mutex, mtx_plain) != thrd_success) {
+		kernel_panic(U"mutex failed");
+	}
 	uint16_t cs = get_cs();
 
 	idt[0] = IDT_INT_GATE(isr_divide_error, cs, 0, 0);
