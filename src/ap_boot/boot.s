@@ -93,6 +93,8 @@ _ap_bootstrap_start:
 
 	lock inc word ptr ap_count_done[ebp]
 
+	lea rsp, stack_bottom[ebp]
+
 	_ap_bootstrap_end:
 	jmp _ap_bootstrap_end
 
@@ -139,6 +141,10 @@ pm_jmp:
 lm_jmp:
 .4byte 0
 .2byte 8
+
+.balign 8
+.skip 0x1000
+stack_bottom:
 
 ap_count_done:
 .2byte 0
