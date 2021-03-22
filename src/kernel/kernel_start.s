@@ -9,6 +9,15 @@ _kernel_start:
 
 	mov rbx, rdi
 
+	# initialize SSE
+	mov rax, cr4
+	or rax, 0x600
+	mov cr4, rax
+	mov rax, cr0
+	and rax, 0xFFFFFFFFFFFFFFFB
+	or rax, 0x2
+	mov cr0, rax
+
 	cmp rbx, 0
 	je _kernel_start_tls_ap
 	call __tls_create_bsp
