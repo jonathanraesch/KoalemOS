@@ -3,7 +3,7 @@
 
 
 enum {
-    thrd_success,
+    thrd_success = 0,
     thrd_nomem,
     thrd_timedout,
     thrd_busy,

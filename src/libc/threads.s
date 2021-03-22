@@ -12,4 +12,5 @@ mtx_lock:
 	pause
 	jmp mtx_lock_loop
 	mtx_lock_done:
+	mov rax, 0
 	ret
