@@ -5,6 +5,12 @@
 #include <string.h>
 
 
+// adjust __tcb_size_sym in linkerscript after editing this struct!
+typedef struct {
+	void* thread_ptr;
+} tcb_t;
+
+
 extern const uint8_t tls_image[];
 extern void* __tls_image_size_sym;
 const size_t tls_image_size = (size_t)&__tls_image_size_sym;
@@ -16,22 +22,24 @@ extern void set_fsbase(void*);
 
 void __tls_create_bsp() {
 	uint8_t* ptr = __bsp_tls_buf;
-	*(uint64_t*)ptr = (uint64_t)&ptr[tls_image_size+8];
+	tcb_t* tcb = (tcb_t*)&ptr[tls_image_size];
+	tcb->thread_ptr = tcb;
 	// using a loop instead of memcpy limits stack usage
 	for(int i = 0; i < tls_image_size; i++) {
-		ptr[i+8] = tls_image[i];
+		ptr[i] = tls_image[i];
 	}
-	set_fsbase(ptr);
+	set_fsbase(tcb);
 }
 
 bool tls_create() {
-	uint8_t* ptr = kmalloc(tls_image_size + 8);
+	uint8_t* ptr = kmalloc(tls_image_size + sizeof(tcb_t));
 	if(!ptr) {
 		return false;
 	}
-	*(uint64_t*)ptr = (uint64_t)&ptr[tls_image_size+8];
-	memcpy(ptr+8, tls_image, tls_image_size);
-	set_fsbase(ptr);
+	tcb_t* tcb = (tcb_t*)&ptr[tls_image_size];
+	tcb->thread_ptr = tcb;
+	memcpy(ptr, tls_image, tls_image_size);
+	set_fsbase(tcb);
 	return true;
 }
 
