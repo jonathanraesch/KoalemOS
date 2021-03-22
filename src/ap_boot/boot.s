@@ -95,6 +95,9 @@ _ap_bootstrap_start:
 
 	lea rsp, stack_bottom[ebp]
 
+	mov rax, cr3_val[ebp]
+	mov cr3, rax
+
 	_ap_bootstrap_end:
 	jmp _ap_bootstrap_end
 
@@ -146,6 +149,8 @@ lm_jmp:
 .skip 0x1000
 stack_bottom:
 
+cr3_val:
+.8byte 0
 ap_count_done:
 .2byte 0
 ap_count:

@@ -6,6 +6,8 @@
 
 extern uint8_t ap_boot_image[];
 
+extern uint64_t __ap_boot_get_cr3();
+
 bool ap_boot_paddr_unset = true;
 void* ap_boot_paddr = 0;
 
@@ -16,6 +18,7 @@ uint16_t boot_aps() {
 		map_page((void*)((uintptr_t)ap_boot_paddr + 0x1000*i), (void*)((uintptr_t)ap_boot_paddr + 0x1000*i), PAGING_FLAG_READ_WRITE);
 	}
 	memcpy(ap_boot_paddr, &ap_boot_image, ap_boot_image_size);
+	*(uint64_t*)((uintptr_t)ap_boot_paddr + ap_boot_image_size - 12) = __ap_boot_get_cr3();
 
 	send_init_sipi_sipi((uintptr_t)ap_boot_paddr>>12);
 

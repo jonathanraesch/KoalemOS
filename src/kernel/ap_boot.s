@@ -1,4 +1,11 @@
 
+.section .text
+
+.global __ap_boot_get_cr3
+__ap_boot_get_cr3:
+	mov rax, cr3
+	ret
+
 .section .rodata
 
 .global ap_boot_image
