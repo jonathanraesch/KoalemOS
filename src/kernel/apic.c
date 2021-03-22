@@ -71,6 +71,8 @@ extern void __isr_timer();
 extern void __isr_timer_rdtsc();
 extern uint64_t __apic_read_tsc();
 
+extern uint16_t ap_count;
+
 void* __apic_reg_eoi;
 void (*__apic_timer_callback)();
 
@@ -150,7 +152,9 @@ void init_apic(uint64_t tsc_freq_hz) {
 
 
 void broadcast_ipi(uint8_t vec) {
-	APIC_REG(APIC_OFFS_ICR_LO) = APIC_IPI_DEST_NOTSELF | APIC_IPI_LEV_ASS | vec;
+	if(ap_count > 0) {
+		APIC_REG(APIC_OFFS_ICR_LO) = APIC_IPI_DEST_NOTSELF | APIC_IPI_LEV_ASS | vec;
+	}
 }
 
 void send_init_sipi_sipi(uint8_t vec) {
