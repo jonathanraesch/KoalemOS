@@ -18,4 +18,24 @@ kernel_heap_start:
 .global invalidate_tlbs_for
 invalidate_tlbs_for:
 	invlpg [rdi]
+	mov invalidate_tlbs_tar[rip], rdi
+	mov rax, 0
+	mov al, __invld_tlbs_vec[rip]
+	mov rdi, rax
+	call broadcast_ipi
 	ret
+
+
+.global isr_invalidate_tlbs
+isr_invalidate_tlbs:
+	push rax
+	lea rax, invalidate_tlbs_tar[rip]
+	invlpg [rax]
+	pop rax
+	ret
+
+
+.section .data
+
+invalidate_tlbs_tar:
+.8byte 0

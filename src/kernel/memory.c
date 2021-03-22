@@ -2,6 +2,7 @@
 #include "kernel/kernel.h"
 #include "kernel/mmap.h"
 #include "kernel/ap_boot.h"
+#include "kernel/interrupt.h"
 #include <stdbool.h>
 #include <stdalign.h>
 #include <string.h>
@@ -9,6 +10,7 @@
 
 
 extern void invalidate_tlbs_for(volatile void* vaddr);
+extern void isr_invalidate_tlbs();
 void map_page(void* vaddr, void* paddr, uint64_t flags);
 
 
@@ -75,6 +77,8 @@ static mtx_t phys_mmap_mutex;
 static mtx_t phys_mmap_ext_mutex;
 static mtx_t virt_mmap_mutex;
 static mtx_t paging_mutex;
+
+uint8_t __invld_tlbs_vec;
 
 
 static void* alloc_phys_pages(uint64_t pages) {
@@ -265,10 +269,10 @@ void map_page(void* vaddr, void* paddr, uint64_t flags) {
 	*PDPTE_ADDR_OF(vaddr) = pdpte_val;
 	*PML4E_ADDR_OF(vaddr) = pml4e_val;
 
+	invalidate_tlbs_for(vaddr);
 	if(mtx_unlock(&paging_mutex) != thrd_success) {
 		kernel_panic(U"mutex failed");
 	}
-	invalidate_tlbs_for(vaddr);
 }
 
 // TODO: fix memory leak
@@ -287,10 +291,10 @@ void unmap_page(void* vaddr) {
 	*PDPTE_ADDR_OF(vaddr) = pdpte_val;
 	*PML4E_ADDR_OF(vaddr) = pml4e_val;
 
+	invalidate_tlbs_for(vaddr);
 	if(mtx_unlock(&paging_mutex) != thrd_success) {
 		kernel_panic(U"mutex failed");
 	}
-	invalidate_tlbs_for(vaddr);
 }
 
 static void unmap_page_fix_size(void* vaddr) {
@@ -420,6 +424,8 @@ void init_memory_management(efi_mmap_data* mmap_data) {
 	if(mtx_init(&paging_mutex, mtx_plain) != thrd_success) {
 		kernel_panic(U"mutex failed");
 	}
+
+	__invld_tlbs_vec = alloc_interrupt_vector(isr_invalidate_tlbs);
 
 	init_mmap(mmap_data);
 	init_heap();

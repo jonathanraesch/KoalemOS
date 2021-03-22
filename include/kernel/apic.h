@@ -8,4 +8,5 @@ void start_apic_timer(uint32_t count, uint8_t div_pow, bool periodic, void (*cal
 void start_apic_timer_rt(double seconds, bool periodic, void (*callback)());
 void stop_apic_timer();
 
+void broadcast_ipi(uint8_t vec);
 void send_init_sipi_sipi(uint8_t vec);

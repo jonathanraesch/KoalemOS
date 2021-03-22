@@ -81,4 +81,4 @@ The configurable options are set by environment variables:
   * these methods should work, but are currently not testable
   * may resolve timing issues when testing with KVM
 * optimize mutex use / synchronization
-* implement synchronization of shared structures between CPUs (mainly TLB invalidation)
+* check synchronization of shared structures between CPUs
