@@ -17,11 +17,12 @@ __apic_enable:
 
 .global __isr_timer
 __isr_timer:
-	nop
+	push rax
 	mov rax, __apic_timer_callback[rip]
 	call rax
 	mov rax, __apic_reg_eoi[rip]
 	mov DWORD PTR [rax], 0
+	pop rax
 	iretq
 
 
