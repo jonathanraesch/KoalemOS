@@ -66,7 +66,7 @@ static memory_map phys_mmap = {.memory_ranges=_phys_mmap_range_buf, .range_count
 #define KERNEL_HEAP_MAX_SIZE 0x4000000000
 #define KERNEL_HEAP_INIT_SIZE 0x1000
 extern max_align_t kernel_heap_start[];
-static max_align_t* kernel_heap_end = kernel_heap_start + KERNEL_HEAP_INIT_SIZE;
+static max_align_t* kernel_heap_end = (max_align_t*)((uintptr_t)kernel_heap_start + KERNEL_HEAP_INIT_SIZE);
 static heap_entry* first_heap_entry;
 static heap_entry* last_heap_entry;
 
