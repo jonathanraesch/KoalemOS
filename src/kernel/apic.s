@@ -28,6 +28,8 @@ __isr_timer:
 
 .global __isr_timer_rdtsc
 __isr_timer_rdtsc:
+	push rax
+	push rdx
 	lfence
 	rdtsc
 	shl rdx, 32
@@ -35,6 +37,8 @@ __isr_timer_rdtsc:
 	mov __apic_tsc_end[rip], rax
 	mov rax, __apic_reg_eoi[rip]
 	mov DWORD PTR [rax], 0
+	pop rdx
+	pop rax
 	iretq
 
 .global __apic_read_tsc
