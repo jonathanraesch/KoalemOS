@@ -627,7 +627,7 @@ void kfree(void* ptr) {
 		}
 	}
 
-	if(!entry->next && entry->last && (void*)ALIGN_UP(entry->memory + sizeof(max_align_t), 0x1000) != kernel_heap_end) {
+	if(!entry->next && entry->last && (void*)ALIGN_UP((uintptr_t)entry->memory + sizeof(max_align_t), 0x1000) != kernel_heap_end) {
 		uintptr_t new_end = ALIGN_UP(entry, 0x1000);
 		if(entry == (void*)new_end) {
 			last_heap_entry = entry->last;
