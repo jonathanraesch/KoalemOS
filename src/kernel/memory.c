@@ -3,7 +3,6 @@
 #include "kernel/mmap.h"
 #include "kernel/ap_boot.h"
 #include "kernel/interrupt.h"
-#include <stdbool.h>
 #include <stdalign.h>
 #include <string.h>
 #include <threads.h>
@@ -432,6 +431,31 @@ void init_memory_management(efi_mmap_data* mmap_data) {
 	init_virt_mmap();
 }
 
+bool heap_consistency_check() {
+	if(kernel_heap_start != (max_align_t*)first_heap_entry) {
+		return false;
+	}
+	if((uintptr_t)kernel_heap_end != (uintptr_t)last_heap_entry->memory + last_heap_entry->size) {
+		return false;
+	}
+	heap_entry* entry = first_heap_entry;
+	while(entry->next) {
+		if((uintptr_t)entry->next != (uintptr_t)entry->memory + entry->size) {
+			return false;
+		}
+		entry = entry->next;
+	}
+	if(entry != last_heap_entry) {
+		return false;
+	}
+	while(entry->last) {
+		entry = entry->last;
+	}
+	if(entry != first_heap_entry) {
+		return false;
+	}
+	return true;
+}
 
 void* kmalloc(size_t size) {
 	size = ALIGN_UP(size, alignof(max_align_t));

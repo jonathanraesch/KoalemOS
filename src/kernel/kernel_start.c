@@ -28,7 +28,9 @@ void __kernel_bsp_init(boot_info* bi_ptr) {
 	init_apic(boot_inf.tsc_freq_hz);
 	uint16_t ap_count = boot_aps();
 	init_memory_management(&boot_inf.mmap_data);
-	kernel_post_init_check();
+	if(!kernel_post_init_check()) {
+		kernel_panic(U"post init check failed");
+	}
 	init_graphics(&boot_inf.gop_fb_info, 20);
 	fill_screen(0.0, 0.0, 0.0);
 	init_acpi(boot_inf.acpi_x_r_sdt);

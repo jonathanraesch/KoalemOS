@@ -1,3 +1,4 @@
 #pragma once
+#include <stdbool.h>
 
-void kernel_post_init_check();
+bool kernel_post_init_check();
