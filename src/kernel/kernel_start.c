@@ -26,7 +26,7 @@ void __kernel_bsp_init(boot_info* bi_ptr) {
 	setup_idt();
 	init_idt();
 	init_apic(boot_inf.tsc_freq_hz);
-	uint16_t ap_count = boot_aps();
+	boot_aps();
 	init_memory_management(&boot_inf.mmap_data);
 	if(!kernel_post_init_check()) {
 		kernel_panic(U"post init check failed");
