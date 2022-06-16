@@ -63,7 +63,7 @@
 #define APIC_IPI_DEST_NOTSELF		0xC0000
 
 
-#define APIC_REG(OFFSET) (*(uint32_t*)((uintptr_t)apic_base + (OFFSET)))
+#define APIC_REG(OFFSET) (*(volatile uint32_t*)((uintptr_t)apic_base + (OFFSET)))
 
 
 extern void* __apic_enable();
@@ -73,10 +73,10 @@ extern uint64_t __apic_read_tsc();
 
 extern uint16_t ap_count;
 
-void* __apic_reg_eoi;
+volatile void* __apic_reg_eoi;
 void (*__apic_timer_callback)();
 
-uint64_t __apic_tsc_end = 0;
+volatile uint64_t __apic_tsc_end = 0;
 
 static void* apic_base;
 static uint8_t timer_int;
@@ -142,7 +142,7 @@ static void set_timer_freq(uint64_t tsc_freq_hz) {
 
 void init_apic(uint64_t tsc_freq_hz) {
 	apic_base = __apic_enable();
-	__apic_reg_eoi = (void*)((uintptr_t)apic_base + APIC_OFFS_EOI);
+	__apic_reg_eoi = (volatile void*)((uintptr_t)apic_base + APIC_OFFS_EOI);
 	APIC_REG(APIC_OFFS_ERROR_STATUS) = 0;
 
 	timer_int = alloc_interrupt_vector(__isr_timer);
