@@ -19,6 +19,7 @@ It can be found in the `fonts` directory. Other ttf files and more information c
 * x86_64-cross-toolchain (see below)
 * mtools
 * FreeType sources (set `$LIBFTDIR` appropriately)
+* GNU gettext (for envsubst command)
 
 
 ## Cross Compiler
