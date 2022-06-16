@@ -22,9 +22,16 @@ else
 	fi
 fi
 
-if [ ! -w $PREFIX ]; then
-	echo "insufficient permissions in ${PREFIX} to install compiler"
-	exit 1
+if [ -d $PREFIX ]; then
+	if [ ! -w $PREFIX ]; then
+		echo "insufficient permissions in ${PREFIX} to install compiler"
+		exit 1
+	fi
+else
+	if [ ! -w $(dirname $PREFIX) ]; then
+		echo "insufficient permissions in \"$(dirname $PREFIX)\" to create installation directory"
+		exit 1
+	fi
 fi
 
 
