@@ -45,6 +45,7 @@ The configurable options are set by environment variables:
 * check ACPI table checksums
 * check kernel heap limit in kmalloc/krealloc
 * possibly add static bounds checking for stacks
+* detect stack overflow
 
 ### memory
 * fix memory leak from paging structures (if feasible, also from physical memory map)

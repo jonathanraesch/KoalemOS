@@ -12,13 +12,16 @@
 #include "kernel/kernel.h"
 
 
-static _Thread_local uint8_t kernel_stack[0x2000];
+#define KERNEL_STACK_SIZE 0x4000
+
+
+static _Thread_local uint8_t kernel_stack[KERNEL_STACK_SIZE];
 
 static boot_info boot_inf;
 
 
 void* __get_kernel_sp() {
-	return &kernel_stack[0x2000];
+	return &kernel_stack[KERNEL_STACK_SIZE];
 }
 
 void __kernel_bsp_init(boot_info* bi_ptr) {
