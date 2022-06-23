@@ -327,6 +327,19 @@ static void unmap_page_fix_size(void* vaddr) {
 	unmap_page(vaddr);
 }
 
+void* create_virt_mapping(void* paddr, size_t size, uint64_t flags) {
+	uintptr_t base = (uintptr_t)PAGE_BASE(paddr);
+	uintptr_t page_count = ((uintptr_t)PAGE_BASE((uintptr_t)paddr + size - 1) - base)/0x1000 + 1;
+	uintptr_t virt_base = (uintptr_t)alloc_virt_pages(page_count);
+	if(!virt_base) {
+		return 0;
+	}
+	for(uintptr_t offset = 0; offset <= page_count*0x1000; offset += 0x1000) {
+		map_page((void*)(virt_base + offset), (void*)(base + offset), flags);
+	}
+	return (void*)(virt_base + ((uintptr_t)paddr & 0xFFF));
+}
+
 
 static void init_mmap(efi_mmap_data* mmap_data) {
 	void* const efi_mmap_start = mmap_data->descriptors;
