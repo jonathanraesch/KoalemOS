@@ -10,6 +10,7 @@
 #include "kernel/acpi.h"
 #include "kernel/pci.h"
 #include "kernel/kernel.h"
+#include "kernel/tls.h"
 
 
 #define KERNEL_STACK_SIZE 0x4000
@@ -41,6 +42,9 @@ void __kernel_bsp_init(boot_info* bi_ptr) {
 		kernel_panic(U"failed to initialize PCI");
 	}
 
+	if(!tls_reserve_ap_space(ap_count)) {
+		kernel_panic(U"failed to reserve space for AP TLS");
+	}
 	for(int i = 0; i < ap_count; i++) {
 		print_str(U"AP booted\n");
 	}
