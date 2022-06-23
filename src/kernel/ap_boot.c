@@ -12,6 +12,8 @@ bool ap_boot_paddr_unset = true;
 void* ap_boot_paddr = 0;
 uint16_t ap_count = 0;
 
+extern void _kernel_start();
+
 
 void boot_aps() {
 	int pages = ap_boot_image_size % 0x1000 ? ap_boot_image_size / 0x1000 + 1 : ap_boot_image_size % 0x1000;
@@ -20,6 +22,7 @@ void boot_aps() {
 	}
 	memcpy(ap_boot_paddr, &ap_boot_image, ap_boot_image_size);
 	*(uint64_t*)((uintptr_t)ap_boot_paddr + ap_boot_image_size - 12) = __ap_boot_get_cr3();
+	*(uint64_t*)((uintptr_t)ap_boot_paddr + ap_boot_image_size - 20) = (uint64_t)_kernel_start;
 
 	send_init_sipi_sipi((uintptr_t)ap_boot_paddr>>12);
 

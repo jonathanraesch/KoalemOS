@@ -97,7 +97,8 @@ _ap_bootstrap_start:
 	mov cr3, rax
 
 	_ap_bootstrap_end:
-	jmp _ap_bootstrap_end
+	mov rax, start_fun_addr[ebp]
+	jmp rax
 
 
 .section .data
@@ -143,6 +144,8 @@ lm_jmp:
 .4byte 0
 .2byte 8
 
+start_fun_addr:
+.8byte 0
 cr3_val:
 .8byte 0
 ap_count_done:
