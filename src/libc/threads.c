@@ -16,6 +16,13 @@ int mtx_lock(mtx_t *mutex) {
 	return thrd_success;
 }
 
+int mtx_trylock(mtx_t *mutex) {
+	if(atomic_exchange(mutex, true)) {
+		return thrd_busy;
+	}
+	return thrd_success;
+}
+
 int mtx_unlock(mtx_t *mutex) {
 	atomic_store(mutex, false);
 	return thrd_success;

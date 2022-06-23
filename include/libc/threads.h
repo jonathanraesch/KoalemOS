@@ -22,4 +22,5 @@ typedef _Atomic _Bool mtx_t;
 
 int mtx_init(mtx_t* mutex, int type);
 int mtx_lock(mtx_t *mutex);
+int mtx_trylock(mtx_t *mutex);
 int mtx_unlock(mtx_t *mutex);
