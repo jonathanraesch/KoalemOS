@@ -1,15 +1,22 @@
 #include "libc/threads.h"
+#include <stdbool.h>
 
 
 int mtx_init(mtx_t* mutex, int type) {
 	if(type & mtx_recursive || type & mtx_timed) {
 		return thrd_error;
 	}
-	*mutex = 0;
+	*mutex = false;
+	return thrd_success;
+}
+
+int mtx_lock(mtx_t *mutex) {
+	while(atomic_exchange(mutex, true)) {
+	}
 	return thrd_success;
 }
 
 int mtx_unlock(mtx_t *mutex) {
-	*mutex = 0;
+	atomic_store(mutex, false);
 	return thrd_success;
 }

@@ -1,9 +1,9 @@
 #pragma once
-#include <stdint.h>
+#include <stdatomic.h>
 
 
 enum {
-    thrd_success = 0,
+    thrd_success,
     thrd_nomem,
     thrd_timedout,
     thrd_busy,
@@ -17,7 +17,7 @@ enum {
 };
 
 
-typedef volatile uint64_t mtx_t;
+typedef _Atomic _Bool mtx_t;
 
 
 int mtx_init(mtx_t* mutex, int type);
