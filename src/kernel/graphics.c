@@ -28,6 +28,7 @@ typedef struct {
 
 
 static gop_framebuffer_info fb_info;
+static pixel_bgrx8u* fb;
 
 static pixel_bgrx8u bg_col = {.red=0, .green=0, .blue=0, ._reserved=0};
 static pixel_bgrx8u fg_col = {.red=255, .green=255, .blue=255, ._reserved=0};
@@ -105,10 +106,17 @@ void init_graphics(gop_framebuffer_info* info, int font_size) {
 		kernel_panic(U"mutex failed");
 	}
 	fb_info = *info;
-	uint8_t* last = PAGE_BASE((uintptr_t)fb_info.addr + fb_info.hres*fb_info.vres*4);
-	for(uint8_t* base = (uint8_t*)PAGE_BASE(fb_info.addr); base <= last; base += 0x1000) {
-		map_page(base, base, PAGING_FLAG_READ_WRITE | PAGING_FLAG_PAGE_LEVEL_CACHE_DISABLE);
+	uintptr_t last = (uintptr_t)PAGE_BASE((uintptr_t)fb_info.addr + fb_info.hres*fb_info.vres*4 - 1);
+	uintptr_t base = (uintptr_t)PAGE_BASE(fb_info.addr);
+	uint64_t page_count = (last - base)/0x1000 + 1;
+	void* virt_base = alloc_virt_pages(page_count);
+	if(!virt_base) {
+		kernel_panic(U"failed to allocate virtual pages for graphics");
 	}
+	for(uintptr_t offset = 0; offset < page_count*0x1000; offset += 0x1000) {
+		map_page((void*)((uintptr_t)virt_base + offset), (void*)(base + offset), PAGING_FLAG_READ_WRITE | PAGING_FLAG_PAGE_LEVEL_CACHE_DISABLE);
+	}
+	fb = (pixel_bgrx8u*)((uintptr_t)virt_base + ((uintptr_t)fb_info.addr - base));
 
 	for(int i = 0; i < 256; i++) {
 		bg_fg_lerp[i] = col_lerp(bg_col, fg_col, i/255.0);
@@ -128,7 +136,6 @@ void fill_screen(float red, float green, float blue) {
 		.blue = blue*255,
 		._reserved = 0
 	};
-	pixel_bgrx8u* fb = (pixel_bgrx8u*)fb_info.addr;
 	for(uint32_t y = 0; y < fb_info.vres; y++) {
 		for(uint32_t x = 0; x < fb_info.width; x++) {
 			fb[(uint64_t)y*fb_info.width + x] = col;
@@ -242,7 +249,6 @@ static void __print_char(uint32_t ch) {
 
 	pixel_bgrx8u* bm = get_glyph(ch);
 
-	pixel_bgrx8u* fb = (pixel_bgrx8u*)fb_info.addr;
 	for(uint32_t y = 0; y < adv_y; y++) {
 		memcpy(fb + (next_y + y)*fb_info.width + next_x, bm + y*adv_x, adv_x*sizeof(pixel_bgrx8u));
 	}
