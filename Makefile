@@ -27,6 +27,8 @@ UEFIIMGSIZE := 2880
 
 SRCTYPES := .s .c
 
+QEMUFLAGS := -bios OVMF.fd -smp 4 -net none -M q35 -drive file=$(UEFIIMAGE),format=raw
+
 -include $(CROSSMAKEFILE)
 -include $(LIBCMAKEFILE)
 -include $(FREETYPEMAKEFILE)
@@ -43,10 +45,13 @@ SRCTYPES := .s .c
 all: $(UEFIIMAGE) $(LIBC) $(KLIBC)
 
 run: $(UEFIIMAGE)
-	qemu-system-x86_64 -bios OVMF.fd -smp 4 -net none -drive file=$<,format=raw -M q35
+	qemu-system-x86_64 $(QEMUFLAGS)
 
 run-debug: $(UEFIIMAGE)
-	qemu-system-x86_64 -s -bios OVMF.fd -smp 4 -net none -drive file=$<,format=raw -M q35
+	qemu-system-x86_64 -s $(QEMUFLAGS)
+
+run-wait-debug: $(UEFIIMAGE)
+	qemu-system-x86_64 -s -S $(QEMUFLAGS)
 
 $(UEFIIMAGE): $(UEFIBINARY) $(KERNELBINARY)
 	dd if=/dev/zero of=$@ bs=1k count=$(UEFIIMGSIZE)
