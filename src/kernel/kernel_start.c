@@ -27,7 +27,7 @@ void* __get_kernel_sp() {
 	return &kernel_stack[KERNEL_STACK_SIZE];
 }
 
-bool reserve_ap_init_stack(uint16_t ap_count) {
+static bool reserve_ap_init_stack(uint16_t ap_count) {
 	void* ptr = kmalloc(AP_INIT_STACK_SIZE * ap_count);
 	if(!ptr) {
 		return false;
