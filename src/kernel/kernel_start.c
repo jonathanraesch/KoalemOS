@@ -14,15 +14,26 @@
 
 
 #define KERNEL_STACK_SIZE 0x4000
+#define AP_INIT_STACK_SIZE 128
 
 
 static _Thread_local uint8_t kernel_stack[KERNEL_STACK_SIZE];
 
 static boot_info boot_inf;
 
+void set_ap_init_stack(void* ptr, void* limit, uint64_t size_each);
 
 void* __get_kernel_sp() {
 	return &kernel_stack[KERNEL_STACK_SIZE];
+}
+
+bool reserve_ap_init_stack(uint16_t ap_count) {
+	void* ptr = kmalloc(AP_INIT_STACK_SIZE * ap_count);
+	if(!ptr) {
+		return false;
+	}
+	set_ap_init_stack(ptr, (void*)((uintptr_t)ptr+ap_count*AP_INIT_STACK_SIZE), AP_INIT_STACK_SIZE);
+	return true;
 }
 
 void __kernel_bsp_init(boot_info* bi_ptr) {
@@ -44,6 +55,9 @@ void __kernel_bsp_init(boot_info* bi_ptr) {
 
 	if(!tls_reserve_ap_space(ap_count)) {
 		kernel_panic(U"failed to reserve space for AP TLS");
+	}
+	if(!reserve_ap_init_stack(ap_count)) {
+		kernel_panic(U"failed to reserve space for initial AP stack");
 	}
 	for(int i = 0; i < ap_count; i++) {
 		print_str(U"AP booted\n");

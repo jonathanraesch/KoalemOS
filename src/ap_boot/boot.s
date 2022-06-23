@@ -93,8 +93,6 @@ _ap_bootstrap_start:
 
 	lock inc word ptr ap_count_done[ebp]
 
-	lea rsp, stack_bottom[ebp]
-
 	mov rax, cr3_val[ebp]
 	mov cr3, rax
 
@@ -144,10 +142,6 @@ pm_jmp:
 lm_jmp:
 .4byte 0
 .2byte 8
-
-.balign 8
-.skip 0x1000
-stack_bottom:
 
 cr3_val:
 .8byte 0
