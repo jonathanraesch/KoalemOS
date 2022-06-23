@@ -32,7 +32,7 @@ isr_invalidate_tlbs:
 	lea rax, invalidate_tlbs_tar[rip]
 	invlpg [rax]
 	pop rax
-	ret
+	iretq
 
 
 .section .data
