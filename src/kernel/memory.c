@@ -340,6 +340,14 @@ void* create_virt_mapping(void* paddr, size_t size, uint64_t flags) {
 	return (void*)(virt_base + ((uintptr_t)paddr & 0xFFF));
 }
 
+void delete_virt_mapping(void* vaddr, size_t size) {
+	uintptr_t base = (uintptr_t)PAGE_BASE(vaddr);
+	uintptr_t page_count = ((uintptr_t)PAGE_BASE((uintptr_t)vaddr + size - 1) - base)/0x1000 + 1;
+	for(uintptr_t offset = 0; offset <= page_count*0x1000; offset += 0x1000) {
+		unmap_page((void*)(base + offset));
+	}
+}
+
 
 static void init_mmap(efi_mmap_data* mmap_data) {
 	void* const efi_mmap_start = mmap_data->descriptors;

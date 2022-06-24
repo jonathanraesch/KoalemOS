@@ -16,6 +16,7 @@ void map_page(void* vaddr, void* paddr, uint64_t flags);
 void unmap_page(void* vaddr);
 
 void* create_virt_mapping(void* paddr, size_t size, uint64_t flags);
+void delete_virt_mapping(void* vaddr, size_t size);
 
 void init_memory_management(efi_mmap_data* mmap_data);
 bool heap_consistency_check();
