@@ -241,14 +241,9 @@ bool init_pci() {
 			.end_bus_num=base_addrs[group].end_bus_num
 		};
 
-		uint64_t page_count = (groups[group].end_bus_num - groups[group].start_bus_num)*0x100;
-		groups[group].vaddr = alloc_virt_pages(page_count);
+		groups[group].vaddr = create_virt_mapping(groups[group].paddr, (groups[group].end_bus_num - groups[group].start_bus_num)*0x100000, PAGING_FLAG_PAGE_LEVEL_CACHE_DISABLE | PAGING_FLAG_READ_WRITE);
 		if(!groups[group].vaddr) {
 			return false;	// TODO: free already allocated pages and mappings
-		}
-
-		for(uintptr_t offset = 0; offset < page_count*0x1000; offset+=0x1000) {
-			map_page((void*)((uintptr_t)groups[group].vaddr+offset), (void*)((uintptr_t)groups[group].paddr+offset), PAGING_FLAG_PAGE_LEVEL_CACHE_DISABLE | PAGING_FLAG_READ_WRITE);
 		}
 	}
 	return find_devices();
