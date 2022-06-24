@@ -346,6 +346,7 @@ void delete_virt_mapping(void* vaddr, size_t size) {
 	for(uintptr_t offset = 0; offset <= page_count*0x1000; offset += 0x1000) {
 		unmap_page((void*)(base + offset));
 	}
+	free_virt_pages((void*)base, page_count);
 }
 
 
