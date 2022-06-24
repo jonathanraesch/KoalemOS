@@ -56,10 +56,7 @@ The configurable options are set by environment variables:
   * system structures (MMIO, ACPI tables, ...)
   * userspace memory
   * kernel memory
-* revisit ACPI table paging
-  * map dynamically using alloc_virt_pages
-  * is mapping the first page of ACPI tables is always sufficient to read header information?
-  * possibly unmap tables, when not needed
+* unmap ACPI tables when no longer needed
 * maybe allocate phys_mmap dynamically
 * add proper handling/removal of page sizes other than 4K
 * free AP bootstrap memory after use
