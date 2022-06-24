@@ -53,6 +53,7 @@ typedef struct _heap_entry {
 
 #define ALIGN_DOWN(ADDR, ALIGN) ((uintptr_t)(ADDR)&~((uintptr_t)(ALIGN)-1u))
 #define ALIGN_UP(ADDR, ALIGN) (ALIGN_DOWN((uintptr_t)(ADDR)-1, (uintptr_t)(ALIGN))+(uintptr_t)(ALIGN))
+#define PAGE_BASE(X) ((void*)((uintptr_t)(X)&0xFFFFFFFFFFFFF000))
 
 
 #define PHYS_MMAP_INIT_MAX_RANGE_COUNT (0x1000 / sizeof(memory_range))
