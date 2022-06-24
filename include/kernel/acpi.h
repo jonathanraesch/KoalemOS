@@ -17,6 +17,6 @@ typedef struct {
 } acpi_sdt;
 
 
-void init_acpi(void* acpi_x_r_sdt);
+void init_acpi(void* acpi_sdt_paddr);
 
 bool get_acpi_table(uint32_t signature, acpi_sdt* table);

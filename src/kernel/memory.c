@@ -360,7 +360,6 @@ static void init_mmap(efi_mmap_data* mmap_data) {
 		EFI_MEMORY_DESCRIPTOR cur_desc = *((EFI_MEMORY_DESCRIPTOR*)cur_desc_ptr);
 		switch(cur_desc.Type) {
 			case EFI_MEM_TYPE_KERNEL:
-			case EfiACPIReclaimMemory:
 				break;
 			case EfiLoaderCode:
 			case EfiLoaderData:

@@ -16,8 +16,18 @@ static uint64_t* xsdt_entries;
 static uint32_t sdt_entry_count;
 
 
-void init_acpi(void* acpi_x_r_sdt) {
+void init_acpi(void* acpi_sdt_paddr) {
+	void* acpi_x_r_sdt = create_virt_mapping(acpi_sdt_paddr, SDT_HEADER_SIZE, 0);
+	if(!acpi_x_r_sdt) {
+		kernel_panic(U"failed to create virt mapping for SDT header");
+	}
 	uint32_t sdt_len = ((uint32_t*)acpi_x_r_sdt)[1];
+	delete_virt_mapping(acpi_x_r_sdt, SDT_HEADER_SIZE);
+	acpi_x_r_sdt = create_virt_mapping(acpi_sdt_paddr, sdt_len, 0);
+	if(!acpi_x_r_sdt) {
+		kernel_panic(U"failed to create virt mapping for SDT");
+	}
+
 	if(*(uint32_t*)acpi_x_r_sdt == ACPI_SIGNATURE_XSDT) {
 		sdt_type = XSDT;
 		xsdt_entries = (uint64_t*)((uintptr_t)acpi_x_r_sdt + SDT_HEADER_SIZE);
@@ -32,34 +42,40 @@ void init_acpi(void* acpi_x_r_sdt) {
 }
 
 bool get_acpi_table(uint32_t signature, acpi_sdt* table) {
-	void* table_addr = 0;
-	switch(sdt_type) {
-		case RSDT:
-			for(uint32_t i = 0; i < sdt_entry_count; i++) {
-				if(*(uint32_t*)(uintptr_t)rsdt_entries[i] == signature) {
-					table_addr = (void*)(uintptr_t)rsdt_entries[i];
-				}
-			}
+	void* table_paddr = 0;
+	uint32_t table_size;
+	for(uint32_t i = 0; i < sdt_entry_count; i++) {
+		switch(sdt_type) {
+			case RSDT:
+				table_paddr = (void*)(uintptr_t)rsdt_entries[i];
+				break;
+			case XSDT:
+				table_paddr = (void*)xsdt_entries[i];
+				break;
+			default:
+				break;
+		}
+		void* table_addr = create_virt_mapping(table_paddr, SDT_HEADER_SIZE, 0);
+		if(!table_addr) {
+			kernel_panic(U"failed to create virt mapping for ACPI table header");
+		}
+		if(*(uint32_t*)table_addr != signature) {
+			delete_virt_mapping(table_addr, SDT_HEADER_SIZE);
+			table_paddr = 0;
+		} else {
+			table_size = *(uint32_t*)((uintptr_t)table_addr + 4);
+			delete_virt_mapping(table_addr, SDT_HEADER_SIZE);
 			break;
-		case XSDT:
-			for(uint32_t i = 0; i < sdt_entry_count; i++) {
-				if(*(uint32_t*)xsdt_entries[i] == signature) {
-					table_addr = (void*)xsdt_entries[i];
-				}
-			}
-			break;
-		default:
-			kernel_panic(U"ACPI not initialized properly");	// this should never happen
-
+		}
 	}
-	if(!table_addr) {
+	if(!table_paddr) {
 		table = 0;
 		return false;
 	}
-	uint32_t table_size = *(uint32_t*)((uintptr_t)table_addr + 4);
-	uint8_t* last = PAGE_BASE((uintptr_t)table_addr + table_size);
-	for(uint8_t* base = (uint8_t*)PAGE_BASE(table_addr) + 0x1000; base <= last; base += 0x1000) {
-		map_page(base, base, 0);
+
+	void* table_addr = create_virt_mapping(table_paddr, table_size, 0);
+	if(!table_addr) {
+		kernel_panic(U"failed to create virt mapping for ACPI table");
 	}
 
 	void* table_body = (void*)((uintptr_t)table_addr + SDT_HEADER_SIZE);
