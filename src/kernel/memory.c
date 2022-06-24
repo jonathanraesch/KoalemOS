@@ -10,7 +10,7 @@
 
 extern void invalidate_tlbs_for(volatile void* vaddr);
 extern void isr_invalidate_tlbs();
-void map_page(void* vaddr, void* paddr, uint64_t flags);
+static void map_page(void* vaddr, void* paddr, uint64_t flags);
 
 
 typedef struct __attribute__((__packed__)) {
@@ -190,7 +190,7 @@ int free_virt_pages(void* base_addr, uint64_t count) {
 #define PHYS_ADDR_OF(VADDR) ((void*)((*PTE_ADDR_OF((VADDR)) & 0xFFFFFFFFF000) + ((uintptr_t)(VADDR) & 0xFFF)))
 
 // TODO: make address calculation for zeroing structures more readable and/or performant
-void map_page(void* vaddr, void* paddr, uint64_t flags) {
+static void map_page(void* vaddr, void* paddr, uint64_t flags) {
 	if(mtx_lock(&paging_mutex) != thrd_success) {
 		kernel_panic(U"mutex failed");
 	}
@@ -275,7 +275,7 @@ void map_page(void* vaddr, void* paddr, uint64_t flags) {
 }
 
 // TODO: fix memory leak
-void unmap_page(void* vaddr) {
+static void unmap_page(void* vaddr) {
 	if(mtx_lock(&paging_mutex) != thrd_success) {
 		kernel_panic(U"mutex failed");
 	}
