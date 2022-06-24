@@ -136,7 +136,7 @@ static void virt_mmap_reduce() {
 	}
 }
 
-void* alloc_virt_pages(uint64_t pages) {
+static void* alloc_virt_pages(uint64_t pages) {
 	if(mtx_lock(&virt_mmap_mutex) != thrd_success) {
 		kernel_panic(U"mutex failed");
 	}
@@ -154,7 +154,7 @@ void* alloc_virt_pages(uint64_t pages) {
 	return 0;
 }
 
-int free_virt_pages(void* base_addr, uint64_t count) {
+static int free_virt_pages(void* base_addr, uint64_t count) {
 	if(mtx_lock(&virt_mmap_mutex) != thrd_success) {
 		kernel_panic(U"mutex failed");
 	}

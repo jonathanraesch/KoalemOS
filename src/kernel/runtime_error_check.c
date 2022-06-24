@@ -8,8 +8,6 @@ static bool test_kernel_heap() {
 		return false;
 	}
 
-	void* v = alloc_virt_pages(0x10000);
-
 	void* b = kmalloc(0x2000);
 	if(!heap_consistency_check()) {
 		return false;
@@ -32,7 +30,6 @@ static bool test_kernel_heap() {
 		return false;
 	}
 
-	free_virt_pages(v, 0x10000);
 	return true;
 }
 
