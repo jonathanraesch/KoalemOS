@@ -11,7 +11,13 @@ int mtx_init(mtx_t* mutex, int type) {
 }
 
 int mtx_lock(mtx_t *mutex) {
-	while(atomic_exchange(mutex, true)) {
+	while(true) {
+		if(!atomic_load(mutex)) {
+			if(!atomic_exchange(mutex, true)) {
+				break;
+			}
+		}
+		__builtin_ia32_pause();
 	}
 	return thrd_success;
 }
