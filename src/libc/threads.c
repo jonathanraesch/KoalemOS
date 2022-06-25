@@ -6,14 +6,14 @@ int mtx_init(mtx_t* mutex, int type) {
 	if(type & mtx_recursive || type & mtx_timed) {
 		return thrd_error;
 	}
-	*mutex = false;
+	mutex->locked = false;
 	return thrd_success;
 }
 
 int mtx_lock(mtx_t *mutex) {
 	while(true) {
-		if(!atomic_load(mutex)) {
-			if(!atomic_exchange(mutex, true)) {
+		if(!atomic_load(&(mutex->locked))) {
+			if(!atomic_exchange(&(mutex->locked), true)) {
 				break;
 			}
 		}
@@ -23,13 +23,13 @@ int mtx_lock(mtx_t *mutex) {
 }
 
 int mtx_trylock(mtx_t *mutex) {
-	if(atomic_exchange(mutex, true)) {
+	if(atomic_exchange(&(mutex->locked), true)) {
 		return thrd_busy;
 	}
 	return thrd_success;
 }
 
 int mtx_unlock(mtx_t *mutex) {
-	atomic_store(mutex, false);
+	atomic_store(&(mutex->locked), false);
 	return thrd_success;
 }

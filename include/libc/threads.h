@@ -17,7 +17,9 @@ enum {
 };
 
 
-typedef _Atomic _Bool mtx_t;
+typedef struct {
+    _Alignas(128) _Atomic _Bool locked;
+} mtx_t;
 
 
 int mtx_init(mtx_t* mutex, int type);
