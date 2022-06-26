@@ -10,3 +10,4 @@ void stop_apic_timer();
 
 void broadcast_ipi(uint8_t vec);
 void send_init_sipi_sipi(uint8_t vec);
+void apic_write_eoi();

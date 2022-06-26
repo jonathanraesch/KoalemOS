@@ -71,8 +71,8 @@
 
 
 extern void* __apic_enable();
-extern void __isr_timer();
-extern void __isr_timer_rdtsc();
+extern void isr_timer();
+extern void isr_timer_rdtsc();
 extern uint64_t __apic_read_tsc();
 
 extern uint16_t ap_count;
@@ -130,7 +130,7 @@ void stop_apic_timer() {
 static void set_timer_freq(uint64_t tsc_freq_hz) {
 	const uint32_t wait_cnt = 100000000;
 
-	uint8_t vec = alloc_interrupt_vector(__isr_timer_rdtsc);
+	uint8_t vec = alloc_interrupt_vector(isr_timer_rdtsc);
 	APIC_REG(APIC_OFFS_LVT_TIMER) = vec;
 	APIC_REG(APIC_OFFS_DIV_CONF) = 11;
 
@@ -150,7 +150,7 @@ void init_apic(uint64_t tsc_freq_hz) {
 	__apic_reg_eoi = (volatile void*)((uintptr_t)apic_base + APIC_OFFS_EOI);
 	APIC_REG(APIC_OFFS_ERROR_STATUS) = 0;
 
-	timer_int = alloc_interrupt_vector(__isr_timer);
+	timer_int = alloc_interrupt_vector(isr_timer);
 	tsc_freq = tsc_freq_hz;
 	set_timer_freq(tsc_freq_hz);
 }
@@ -172,4 +172,9 @@ void send_init_sipi_sipi(uint8_t vec) {
 	APIC_REG(APIC_OFFS_ICR_LO) = APIC_IPI_DEST_NOTSELF | APIC_IPI_LEV_ASS | APIC_IPI_DELIV_SIPI | vec;
 	tsc_target = __apic_read_tsc() + tsc_freq/10;
 	while(__apic_read_tsc() < tsc_target) {}
+}
+
+
+void apic_write_eoi() {
+	APIC_REG(APIC_OFFS_EOI) = 0;
 }

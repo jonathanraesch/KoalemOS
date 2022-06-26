@@ -34,3 +34,8 @@ $(KERNELBUILDDIR)/%.s.o: $(KERNELSRCDIR)/%.s $(APBOOTBINARY)
 $(KERNELBUILDDIR)/%.c.o: $(KERNELSRCDIR)/%.c
 	mkdir -p $(dir $@)
 	$(CC) $(KERNELCFLAGS) -MMD -MF $(@:%.o=%.d) -o $@ -c $<
+
+
+$(KERNELBUILDDIR)/isr/%.c.o: $(KERNELSRCDIR)/isr/%.c
+	mkdir -p $(dir $@)
+	$(CC) $(KERNELCFLAGS) -mgeneral-regs-only -MMD -MF $(@:%.o=%.d) -o $@ -c $<
