@@ -1,5 +1,6 @@
 #include "kernel/apic.h"
 #include "kernel/interrupt.h"
+#include <stdatomic.h>
 
 
 #define APIC_OFFS_LOCAL_ID			0x020
@@ -77,15 +78,14 @@ extern uint64_t __apic_read_tsc();
 
 extern uint16_t ap_count;
 
-volatile void* __apic_reg_eoi;
-void (*__apic_timer_callback)();
+_Thread_local void (*__apic_timer_callback)();
 
-volatile uint64_t __apic_tsc_end = 0;
+_Thread_local _Atomic uint64_t __apic_tsc_end = 0;
 
-static void* apic_base;
+static _Thread_local void* apic_base;
 static _Thread_local uint8_t timer_int;
-static uint64_t tsc_freq;
-static double timer_freq;
+static _Thread_local uint64_t tsc_freq;
+static _Thread_local double timer_freq;
 
 
 void start_apic_timer(uint32_t count, uint8_t div_pow, bool periodic, void (*callback)()) {
@@ -136,10 +136,10 @@ static void set_timer_freq(uint64_t tsc_freq_hz) {
 
 	APIC_REG(APIC_OFFS_INIT_CNT) = wait_cnt;
 	uint64_t tsc_start = __apic_read_tsc();
-	while(!__apic_tsc_end) {}
+	while(!atomic_load(&__apic_tsc_end)) {}
 
 	free_interrupt_vector(vec);
-	double t_diff = __apic_tsc_end-tsc_start;
+	double t_diff = atomic_load(&__apic_tsc_end)-tsc_start;
 	timer_freq = (double)tsc_freq_hz * (double)wait_cnt / t_diff;
 }
 
@@ -147,7 +147,6 @@ static void set_timer_freq(uint64_t tsc_freq_hz) {
 void init_apic(uint64_t tsc_freq_hz) {
 	apic_base = __apic_enable();
 	APIC_REG(APIC_OFFS_SPUR_INT_VEC) = INT_VEC_SPURIOUS | APIC_SPUR_INT_FLAG_SOFTWARE_ENABLE;
-	__apic_reg_eoi = (volatile void*)((uintptr_t)apic_base + APIC_OFFS_EOI);
 	APIC_REG(APIC_OFFS_ERROR_STATUS) = 0;
 
 	timer_int = alloc_interrupt_vector(isr_timer);
