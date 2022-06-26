@@ -11,6 +11,7 @@
 #include "kernel/pci.h"
 #include "kernel/kernel.h"
 #include "kernel/tls.h"
+#include <stdatomic.h>
 
 
 #define KERNEL_STACK_SIZE 0x4000
@@ -20,6 +21,8 @@
 static _Thread_local uint8_t kernel_stack[KERNEL_STACK_SIZE];
 
 static boot_info boot_inf;
+
+static _Atomic uint16_t working_processor_count = 0;
 
 void set_ap_init_stack(void* ptr, void* limit, uint64_t size_each);
 
@@ -71,4 +74,10 @@ void __kernel_init(boot_info* bi_ptr) {
 	} else {
 		init_apic(boot_inf.tsc_freq_hz);
 	}
+	atomic_fetch_add(&working_processor_count, 1);
+}
+
+
+uint16_t get_working_processor_count() {
+	return atomic_load(&working_processor_count);
 }

@@ -1,5 +1,6 @@
 #include "kernel/apic.h"
 #include "kernel/interrupt.h"
+#include "kernel/kernel.h"
 #include <stdatomic.h>
 
 
@@ -156,7 +157,7 @@ void init_apic(uint64_t tsc_freq_hz) {
 
 
 void broadcast_ipi(uint8_t vec) {
-	if(ap_count > 0) {
+	if(get_working_processor_count() > 1) {
 		APIC_REG(APIC_OFFS_ICR_LO) = APIC_IPI_DEST_NOTSELF | APIC_IPI_LEV_ASS | vec;
 	}
 }
