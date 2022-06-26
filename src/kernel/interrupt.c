@@ -28,6 +28,7 @@ extern void isr_simd_exception();
 extern void isr_virtualization_exception();
 extern void isr_control_protection();
 
+extern void isr_inter_processor_call();
 extern void isr_spurious_int();
 
 
@@ -102,6 +103,8 @@ void init_idt() {
 		idt[i] = (idt_gate_descr){.low=0, .high=0};
 	}
 
+	idt[INT_VEC_INTER_PROCESSOR_CALL] = IDT_INT_GATE(isr_inter_processor_call, cs, 0, 0);
+	int_used[INT_VEC_INTER_PROCESSOR_CALL-32] = true;
 	idt[INT_VEC_SPURIOUS] = IDT_INT_GATE(isr_spurious_int, cs, 0, 0);
 	int_used[INT_VEC_SPURIOUS-32] = true;
 

@@ -1,7 +1,9 @@
 #include "kernel/apic.h"
 #include "kernel/interrupt.h"
+#include "kernel/isr/inter_processor_call.h"
 #include "kernel/kernel.h"
 #include <stdatomic.h>
+#include <threads.h>
 
 
 #define APIC_OFFS_LOCAL_ID			0x020
@@ -88,6 +90,8 @@ static _Thread_local uint8_t timer_int;
 static _Thread_local uint64_t tsc_freq;
 static _Thread_local double timer_freq;
 
+static mtx_t ipcall_mutex;
+
 
 void start_apic_timer(uint32_t count, uint8_t div_pow, bool periodic, void (*callback)()) {
 	__apic_timer_callback = callback;
@@ -163,6 +167,10 @@ void broadcast_ipi(uint8_t vec) {
 }
 
 void send_init_sipi_sipi(uint8_t vec) {
+	if(mtx_init(&ipcall_mutex, mtx_plain) != thrd_success) {
+		kernel_panic(U"mutex failed");
+	}
+
 	APIC_REG(APIC_OFFS_ICR_LO) = APIC_IPI_DEST_NOTSELF | APIC_IPI_LEV_ASS | APIC_IPI_DELIV_INIT;
 	uint64_t tsc_target = __apic_read_tsc() + tsc_freq/100;
 	while(__apic_read_tsc() < tsc_target) {}
@@ -172,6 +180,21 @@ void send_init_sipi_sipi(uint8_t vec) {
 	APIC_REG(APIC_OFFS_ICR_LO) = APIC_IPI_DEST_NOTSELF | APIC_IPI_LEV_ASS | APIC_IPI_DELIV_SIPI | vec;
 	tsc_target = __apic_read_tsc() + tsc_freq/10;
 	while(__apic_read_tsc() < tsc_target) {}
+}
+
+
+void inter_processor_call(void (*f)(void)) {
+	if(mtx_lock(&ipcall_mutex) != thrd_success) {
+		kernel_panic(U"mutex failed");
+	}
+	__ip_call_fun = f;
+	atomic_store(&__ip_call_count, 0);
+	broadcast_ipi(INT_VEC_INTER_PROCESSOR_CALL);
+	while(atomic_load(&__ip_call_count) < get_working_processor_count() - 1) {
+	}
+	if(mtx_unlock(&ipcall_mutex) != thrd_success) {
+		kernel_panic(U"mutex failed");
+	}
 }
 
 

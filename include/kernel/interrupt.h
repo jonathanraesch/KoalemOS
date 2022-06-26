@@ -11,7 +11,8 @@ typedef struct {
 } interrupt_frame_t;
 
 
-#define INT_VEC_SPURIOUS	255
+#define INT_VEC_INTER_PROCESSOR_CALL	32
+#define INT_VEC_SPURIOUS				255
 
 
 uint8_t alloc_interrupt_vector(void isr());
