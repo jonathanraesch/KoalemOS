@@ -62,6 +62,10 @@
 #define APIC_IPI_DEST_ALL			0x80000
 #define APIC_IPI_DEST_NOTSELF		0xC0000
 
+#define APIC_SPUR_INT_FLAG_SOFTWARE_ENABLE				0x100
+#define APIC_SPUR_INT_FLAG_FOCUS_PROCESSOR_CHECKING		0x200
+#define APIC_SPUR_INT_FLAG_SURPRESS_EOI_BROADCAST		0x1000
+
 
 #define APIC_REG(OFFSET) (*(volatile uint32_t*)((uintptr_t)apic_base + (OFFSET)))
 
@@ -142,6 +146,7 @@ static void set_timer_freq(uint64_t tsc_freq_hz) {
 
 void init_apic(uint64_t tsc_freq_hz) {
 	apic_base = __apic_enable();
+	APIC_REG(APIC_OFFS_SPUR_INT_VEC) = INT_VEC_SPURIOUS | APIC_SPUR_INT_FLAG_SOFTWARE_ENABLE;
 	__apic_reg_eoi = (volatile void*)((uintptr_t)apic_base + APIC_OFFS_EOI);
 	APIC_REG(APIC_OFFS_ERROR_STATUS) = 0;
 

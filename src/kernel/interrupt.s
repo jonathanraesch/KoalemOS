@@ -117,6 +117,10 @@ isr_control_protection:
 	lea rdi, isr_errstr_control_protection[rip]
 	call kernel_panic
 
+.global isr_spurious_int
+isr_spurious_int:
+	iretq
+
 
 .section .rodata
 

@@ -28,6 +28,8 @@ extern void isr_simd_exception();
 extern void isr_virtualization_exception();
 extern void isr_control_protection();
 
+extern void isr_spurious_int();
+
 
 #define IDT_GATE_PRESENT_FLAG 0x800000000000
 #define IDT_GATE_DPL(X) ((uint64_t)(X)<<45)
@@ -99,6 +101,9 @@ void init_idt() {
 	for(int i = 22; i < IDT_ENTRY_COUNT; i++) {
 		idt[i] = (idt_gate_descr){.low=0, .high=0};
 	}
+
+	idt[INT_VEC_SPURIOUS] = IDT_INT_GATE(isr_spurious_int, cs, 0, 0);
+	int_used[INT_VEC_SPURIOUS-32] = true;
 
 	load_idt(idt, IDT_ENTRY_COUNT*sizeof(idt_gate_descr)-1);
 }
