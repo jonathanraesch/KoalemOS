@@ -38,8 +38,6 @@ static bool reserve_ap_init_stack(uint16_t ap_count) {
 
 void __kernel_bsp_init(boot_info* bi_ptr) {
 	boot_inf = *bi_ptr; // do not use bi_ptr after init_memory_management!
-	setup_idt();
-	init_idt();
 	init_apic(boot_inf.tsc_freq_hz);
 	boot_aps();
 	init_memory_management(&boot_inf.mmap_data);
@@ -66,11 +64,11 @@ void __kernel_bsp_init(boot_info* bi_ptr) {
 
 void __kernel_init(boot_info* bi_ptr) {
 	init_gdt();
+	init_idt();
 
 	if(bi_ptr) {
 		__kernel_bsp_init(bi_ptr);
 	} else {
-		init_idt();
 		init_apic(boot_inf.tsc_freq_hz);
 	}
 }

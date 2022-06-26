@@ -19,8 +19,7 @@ kernel_heap_start:
 invalidate_tlbs_for:
 	invlpg [rdi]
 	mov invalidate_tlbs_tar[rip], rdi
-	mov rax, 0
-	mov al, __invld_tlbs_vec[rip]
+	call __get_invld_tlbs_vec
 	mov rdi, rax
 	call broadcast_ipi
 	ret

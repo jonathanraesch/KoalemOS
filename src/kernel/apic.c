@@ -79,7 +79,7 @@ void (*__apic_timer_callback)();
 volatile uint64_t __apic_tsc_end = 0;
 
 static void* apic_base;
-static uint8_t timer_int;
+static _Thread_local uint8_t timer_int;
 static uint64_t tsc_freq;
 static double timer_freq;
 

@@ -78,7 +78,12 @@ static mtx_t phys_mmap_ext_mutex;
 static mtx_t virt_mmap_mutex;
 static mtx_t paging_mutex;
 
-uint8_t __invld_tlbs_vec;
+static _Thread_local uint8_t __invld_tlbs_vec;
+
+
+uint8_t __get_invld_tlbs_vec() {
+	return __invld_tlbs_vec;
+}
 
 
 static void* alloc_phys_pages(uint64_t pages) {
