@@ -42,7 +42,6 @@ static bool reserve_ap_init_stack(uint16_t ap_count) {
 void __kernel_bsp_init(boot_info* bi_ptr) {
 	boot_inf = *bi_ptr; // do not use bi_ptr after init_memory_management!
 	init_apic(boot_inf.tsc_freq_hz);
-	boot_aps();
 	init_memory_management(&boot_inf.mmap_data);
 	if(!kernel_post_init_check()) {
 		kernel_panic(U"post init check failed");
@@ -54,6 +53,7 @@ void __kernel_bsp_init(boot_info* bi_ptr) {
 		kernel_panic(U"failed to initialize PCI");
 	}
 
+	boot_aps();
 	if(!tls_reserve_ap_space(ap_count)) {
 		kernel_panic(U"failed to reserve space for AP TLS");
 	}
