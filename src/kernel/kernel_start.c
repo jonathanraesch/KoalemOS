@@ -75,6 +75,8 @@ void __kernel_init(boot_info* bi_ptr) {
 		init_apic(boot_inf.tsc_freq_hz);
 	}
 	atomic_fetch_add(&working_processor_count, 1);
+	while(atomic_load(&working_processor_count) < ap_count+1) {
+	}
 }
 
 
