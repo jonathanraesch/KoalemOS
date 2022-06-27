@@ -66,6 +66,16 @@
 #define APIC_IPI_DEST_ALL			0x80000
 #define APIC_IPI_DEST_NOTSELF		0xC0000
 
+#define APIC_LVT_DELIV_FIXED		0
+#define APIC_LVT_DELIV_SMI			0x200
+#define APIC_LVT_DELIV_NMI			0x400
+#define APIC_LVT_DELIV_INIT			0x500
+#define APIC_LVT_DELIV_EXTINT		0x700
+#define APIC_LVT_MASKED				0x10000
+#define APIC_LVT_TMR_ONESHOT		0
+#define APIC_LVT_TMR_PERIODIC		0x20000
+#define APIC_LVT_TMR_TSC_DEADLINE	0x40000
+
 #define APIC_SPUR_INT_FLAG_SOFTWARE_ENABLE				0x100
 #define APIC_SPUR_INT_FLAG_FOCUS_PROCESSOR_CHECKING		0x200
 #define APIC_SPUR_INT_FLAG_SURPRESS_EOI_BROADCAST		0x1000
@@ -96,7 +106,7 @@ static mtx_t ipcall_mutex;
 void start_apic_timer(uint32_t count, uint8_t div_pow, bool periodic, void (*callback)()) {
 	__apic_timer_callback = callback;
 	if(periodic) {
-		APIC_REG(APIC_OFFS_LVT_TIMER) = timer_int | (1u << 17);
+		APIC_REG(APIC_OFFS_LVT_TIMER) = timer_int | APIC_LVT_TMR_PERIODIC;
 	} else {
 		APIC_REG(APIC_OFFS_LVT_TIMER) = timer_int;
 	}
@@ -143,7 +153,7 @@ static void set_timer_freq(uint64_t tsc_freq_hz) {
 	uint64_t tsc_start = __apic_read_tsc();
 	while(!atomic_load(&__apic_tsc_end)) {}
 
-	APIC_REG(APIC_OFFS_LVT_TIMER) = 0x10000;
+	APIC_REG(APIC_OFFS_LVT_TIMER) = APIC_LVT_MASKED;
 	free_interrupt_vector(vec);
 	double t_diff = atomic_load(&__apic_tsc_end)-tsc_start;
 	timer_freq = (double)tsc_freq_hz * (double)wait_cnt / t_diff;
