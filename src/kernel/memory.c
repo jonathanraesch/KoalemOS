@@ -3,13 +3,13 @@
 #include "kernel/mmap.h"
 #include "kernel/ap_boot.h"
 #include "kernel/interrupt.h"
+#include "kernel/apic.h"
 #include <stdalign.h>
 #include <string.h>
 #include <threads.h>
 
 
-extern void invalidate_tlbs_for(volatile void* vaddr);
-extern void isr_invalidate_tlbs();
+extern void __invalidate_tlbs();
 static void map_page(void* vaddr, void* paddr, uint64_t flags);
 
 
@@ -78,12 +78,7 @@ static mtx_t phys_mmap_ext_mutex;
 static mtx_t virt_mmap_mutex;
 static mtx_t paging_mutex;
 
-static _Thread_local uint8_t __invld_tlbs_vec;
-
-
-uint8_t __get_invld_tlbs_vec() {
-	return __invld_tlbs_vec;
-}
+void* __invld_tlbs_addr;
 
 
 static void* alloc_phys_pages(uint64_t pages) {
@@ -185,6 +180,14 @@ static int free_virt_pages(void* base_addr, uint64_t count) {
 		kernel_panic(U"mutex failed");
 	}
 	return free_virt_pages(base_addr, count);
+}
+
+
+// only call when current thread holds paging mutex
+static void invalidate_tlbs_for(volatile void* vaddr) {
+	__invld_tlbs_addr = (void*)vaddr;
+	__invalidate_tlbs();
+	inter_processor_call(__invalidate_tlbs);
 }
 
 
@@ -450,8 +453,6 @@ void init_memory_management(efi_mmap_data* mmap_data) {
 	if(mtx_init(&paging_mutex, mtx_plain) != thrd_success) {
 		kernel_panic(U"mutex failed");
 	}
-
-	__invld_tlbs_vec = alloc_interrupt_vector(isr_invalidate_tlbs);
 
 	init_mmap(mmap_data);
 	init_heap();

@@ -15,23 +15,11 @@ kernel_heap_start:
 
 .section .text
 
-.global invalidate_tlbs_for
-invalidate_tlbs_for:
-	invlpg [rdi]
-	mov invalidate_tlbs_tar[rip], rdi
-	call __get_invld_tlbs_vec
-	mov rdi, rax
-	call broadcast_ipi
-	ret
-
-
-.global isr_invalidate_tlbs
-isr_invalidate_tlbs:
-	push rax
-	lea rax, invalidate_tlbs_tar[rip]
+.global __invalidate_tlbs
+__invalidate_tlbs:
+	mov rax, __invld_tlbs_addr[rip]
 	invlpg [rax]
-	pop rax
-	iretq
+	ret
 
 
 .section .data
