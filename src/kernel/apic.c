@@ -143,6 +143,7 @@ static void set_timer_freq(uint64_t tsc_freq_hz) {
 	uint64_t tsc_start = __apic_read_tsc();
 	while(!atomic_load(&__apic_tsc_end)) {}
 
+	APIC_REG(APIC_OFFS_LVT_TIMER) = 0x10000;
 	free_interrupt_vector(vec);
 	double t_diff = atomic_load(&__apic_tsc_end)-tsc_start;
 	timer_freq = (double)tsc_freq_hz * (double)wait_cnt / t_diff;
