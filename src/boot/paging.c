@@ -9,7 +9,7 @@
 
 #define NEXT_STRUCT(ADDR) ((uint64_t*)((uintptr_t)(ADDR) & 0xFFFFFFFFFFFFF000))
 
-EFI_STATUS add_page_mapping(uint64_t *pml4, void* vaddr, void* paddr, EFI_BOOT_SERVICES* bs) {
+EFI_STATUS add_page_mapping(uint64_t *pml4, void* vaddr, void* paddr, page_size size, EFI_BOOT_SERVICES* bs) {
 	EFI_STATUS status;
 	if(!(pml4[PML4_INDEX_OF(vaddr)] & PAGING_FLAG_PRESENT)) {
 		EFI_PHYSICAL_ADDRESS addr;
@@ -25,6 +25,10 @@ EFI_STATUS add_page_mapping(uint64_t *pml4, void* vaddr, void* paddr, EFI_BOOT_S
 	pml4[PML4_INDEX_OF(vaddr)] |= PAGING_FLAG_READ_WRITE;
 
 	uint64_t* pdpt = NEXT_STRUCT(pml4[PML4_INDEX_OF(vaddr)]);
+	if(size == page_size_1G) {
+		pdpt[PDPT_INDEX_OF(vaddr)] = (uintptr_t)paddr | PAGING_FLAG_PAGE_SIZE | PAGING_FLAG_READ_WRITE | PAGING_FLAG_PRESENT;
+		return EFI_SUCCESS;
+	}
 	if(!(pdpt[PDPT_INDEX_OF(vaddr)] & PAGING_FLAG_PRESENT)) {
 		EFI_PHYSICAL_ADDRESS addr;
 		status = uefi_call_wrapper(bs->AllocatePages, 4, AllocateAnyPages, EFI_MEM_TYPE_KERNEL, 1, &addr);
@@ -39,6 +43,10 @@ EFI_STATUS add_page_mapping(uint64_t *pml4, void* vaddr, void* paddr, EFI_BOOT_S
 	pdpt[PDPT_INDEX_OF(vaddr)] |= PAGING_FLAG_READ_WRITE;
 
 	uint64_t* pd = NEXT_STRUCT(pdpt[PDPT_INDEX_OF(vaddr)]);
+	if(size == page_size_2M) {
+		pd[PD_INDEX_OF(vaddr)] = (uintptr_t)paddr | PAGING_FLAG_PAGE_SIZE | PAGING_FLAG_READ_WRITE | PAGING_FLAG_PRESENT;
+		return EFI_SUCCESS;
+	}
 	if(!(pd[PD_INDEX_OF(vaddr)] & PAGING_FLAG_PRESENT)) {
 		EFI_PHYSICAL_ADDRESS addr;
 		status = uefi_call_wrapper(bs->AllocatePages, 4, AllocateAnyPages, EFI_MEM_TYPE_KERNEL, 1, &addr);

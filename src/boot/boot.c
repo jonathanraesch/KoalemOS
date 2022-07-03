@@ -133,7 +133,7 @@ efi_main (EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table) {
 				if(start_page + offset <= last_allocated_page) {
 					continue;
 				}
-				status = add_page_mapping(pml4, (void*)(start_page + offset), (void*)(addr + offset), bs);
+				status = add_page_mapping(pml4, (void*)(start_page + offset), (void*)(addr + offset), page_size_4K, bs);
 				if(status != EFI_SUCCESS) {
 					return status;
 				}
@@ -146,6 +146,14 @@ efi_main (EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table) {
 			for(uintptr_t offset = ph->filesz; offset < ph->memsz; offset++) {
 				*(uint8_t*)(addr + vaddr_offset + offset) = 0;
 			}
+		}
+	}
+
+
+	for(UINTN paddr = 0; paddr < 0x1000000000; paddr += 0x40000000) {
+		status = add_page_mapping(pml4, (void*)(PMAP_LINADDR + paddr), (void*)(paddr), page_size_1G, bs);
+		if(status != EFI_SUCCESS) {
+			return status;
 		}
 	}
 

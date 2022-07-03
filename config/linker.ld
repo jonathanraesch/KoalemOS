@@ -1,8 +1,9 @@
 ENTRY(_kernel_start)
 
 SECTIONS {
-	/* kernel is located at 255TiB (virtual/linear address) */
-	. = 0xFFFFFF0000000000;
+	/* mapping of all/first 64GB physical addresses starting at 255TiB */
+	/* kernel starting at 255TiB + 64GB */
+	. = 0xFFFFFF1000000000;
 	.text : {
 		*(.text)
 	}
