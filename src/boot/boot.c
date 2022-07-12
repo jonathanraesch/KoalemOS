@@ -151,7 +151,7 @@ efi_main (EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table) {
 
 
 	for(UINTN paddr = 0; paddr < 0x1000000000; paddr += 0x40000000) {
-		status = add_page_mapping(pml4, (void*)(PMAP_LINADDR + paddr), (void*)(paddr), page_size_1G, bs);
+		status = add_page_mapping(pml4, PHYS_TO_VIRT(paddr), (void*)(paddr), page_size_1G, bs);
 		if(status != EFI_SUCCESS) {
 			return status;
 		}
